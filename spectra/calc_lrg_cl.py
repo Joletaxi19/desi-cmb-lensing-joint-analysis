@@ -1,5 +1,16 @@
 #!/usr/bin/env python3
 #
+# Code to compute the angular power spectra and covariance
+# matrices given Healpix maps.  This is essentially a thin
+# wrapper around NaMaster.
+#
+# WE WANT TO MODIFY THE I/O HERE TO OUTPUT JSON FILES
+# OR SOME OTHER FORMAT RATHER THAN INDIVIDUAL FILES FOR
+# EACH OF THE CLS, WINDOW FUNCTIONS, COVARIANCES, ETC.
+#
+# THIS REQUIRES SOME THINKING IF WE'RE GOING TO BE
+# USING MOCK-BASED COVARIANCES.
+#
 import numpy    as np
 import healpy   as hp
 import pymaster as nmt
@@ -129,6 +140,10 @@ def pseudo_cl(nside=1024,LperBin=75,lmax=1000,isamp=1):
     # Correct the C_l for the pixel window function.  This correction
     # is really only good up to ell~nside, but making it is better than
     # not making it!
+    #
+    # WE WANT TO MODIFY THIS SO IT ISN'T USING HARD-CODED VALUES BUT
+    # IS SELF-CONSISTENTLY ESTIMATING IT OR IMPORTING IT.
+    #
     sn,ns  = 5.5e-07,2048   # For LRGs.
     if isamp==0: sn = 6.027057e-07
     if isamp==1: sn = 4.019633e-06
