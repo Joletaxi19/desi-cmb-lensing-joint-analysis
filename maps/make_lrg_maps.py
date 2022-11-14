@@ -159,7 +159,7 @@ if __name__=="__main__":
     #
     version = '0.49.0'
     #
-    mb  = '/global/cfs/cdirs/desi/users/rongpu/desi_mask/lrgmask_v1/randoms/'
+    mb  = '/global/cfs/cdirs/desi/users/rongpu/desi_mask/randoms/lrgmask_v1.1/'
     rb  = '/global/cfs/cdirs/desi/target/catalogs/'
     rb += release+'/'+version+'/randoms/resolve/'
     if rank==0:
@@ -167,9 +167,9 @@ if __name__=="__main__":
         flog.write("Random file path: "+rb+"\n")
         flist = glob.glob(rb+r'randoms-[0-9]-[0-9].fits')
         flist+= glob.glob(rb+r'randoms-[0-9]-1[0-9].fits')
+        flist = sorted(flist)
         if len(flist)>nproc:
             flist = flist[:nproc]   # Otherwise it takes too long!
-        flist = sorted(flist)
         flog.write("Will read {:d} rand files...\n".format(len(flist)))
         flog.flush()
     else:
@@ -188,7 +188,7 @@ if __name__=="__main__":
     for i,fn in enumerate(flist):
       if i%nproc==rank:
         tt = Table.read(fn)
-        mf = mb + fn[len(rb):-5] + '-lrgmask_v1.fits'
+        mf = mb + fn[len(rb):-5] + '-lrgmask_v1.1.fits.gz'
         mm = Table.read(mf)
         tt['lrg_mask']=mm['lrg_mask']
         # Restrict to the "observed" area.
