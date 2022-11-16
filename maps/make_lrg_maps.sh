@@ -13,7 +13,7 @@ source activate cmb
 #
 # Now run the code.
 export OMP_NUM_THREADS=32
-srun -n 16 -c 32 python make_lrg_maps.py 2
+srun -n 32 -c 32 python make_lrg_maps.py 2
 #
 date
 #
