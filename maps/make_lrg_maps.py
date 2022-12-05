@@ -102,7 +102,7 @@ if __name__=="__main__":
     # Start with the data.
     #
     db = '/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/catalogs/'
-    fn = 'dr9_lrg_1.1.1_pzbins_20221102.fits'
+    fn = 'dr9_lrg_1.1.1_pzbins_20221204.fits'
     if rank==0:
         flog.write("Cutting on E(B-V)<{:f}\n".format(ebv_cut))
         flog.write("Cutting on STARDENS<{:f}\n".format(star_cut))
