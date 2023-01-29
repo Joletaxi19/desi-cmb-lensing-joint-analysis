@@ -131,6 +131,8 @@ if __name__=="__main__":
                 (tt['PIXEL_NOBS_Z']>1)]
         # Cut out regions of "high" extinction.
         tt = tt[(tt['EBV']<ebv_cut)]
+        # Put on a DEC cut
+        tt = tt[(tt['DEC']>-29)]
         # Apply any other cuts we want here, e.g. on stellar density.
         theta,phi = np.radians(90-tt['DEC']),np.radians(tt['RA'])
         pixnum    = hp.ang2pix(stars_nside,theta,phi,nest=pxw_nest)
@@ -195,6 +197,8 @@ if __name__=="__main__":
         tt = tt[(tt['NOBS_G']>1)&(tt['NOBS_R']>1)&(tt['NOBS_Z']>1)]
         # Cut out regions of "high" extinction.
         tt = tt[(tt['EBV']<ebv_cut)]
+        # Put on a DEC cut
+        tt = tt[(tt['DEC']>-29)]
         # and select LRG objects.
         tt = tt[ tt['lrg_mask']==0 ]
         # Apply any other cuts we want here, e.g. on stellar density.
