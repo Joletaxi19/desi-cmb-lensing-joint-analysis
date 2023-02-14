@@ -68,7 +68,7 @@ if __name__=="__main__":
     if rank==0:
         flog.write("Will write {:d} pixels (Nside={:d}).\n".format(npix,nside))
         flog.write("Format isnest="+str(isnest)+"\n\n")
-    rot = hp.rotator.Rotator(coord=['C','G'])
+    ##rot = hp.rotator.Rotator(coord=['C','G'])
     #
     # Set up the data release and version info we'll use.
     #
@@ -141,7 +141,7 @@ if __name__=="__main__":
         # generate the partial map:
         if len(tt)>0:
             theta,phi = np.radians(90-tt['DEC']),np.radians(tt['RA'])
-            theta,phi = rot(theta,phi) # C->G coordinates
+            ##theta,phi = rot(theta,phi) # C->G coordinates
             pixnum    = hp.ang2pix(nside,theta,phi,nest=isnest)
             tmp, _    = np.histogram(pixnum,bins=np.arange(npix+1)-0.5)
             dmap     += tmp
@@ -232,7 +232,7 @@ if __name__=="__main__":
         # Now bin the randoms into the map, here we convert coordinate
         # systems.
         theta,phi = np.radians(90-tt['DEC']),np.radians(tt['RA'])
-        theta,phi = rot(theta,phi) # C->G coordinates
+        ##theta,phi = rot(theta,phi) # C->G coordinates
         pixnum    = hp.ang2pix(nside,theta,phi,nest=isnest)
         # Produce weighted and unweighted maps.
         tmp, _ = np.histogram(pixnum,weights=wt,bins=np.arange(npix+1)-0.5)
