@@ -1,6 +1,5 @@
 # Code to create mock LRG maps, saved as mock_lrg_s01_del.hpx2048.fits, etc.
 # Must run fetch_WebSky_halos.sh and make_WebSky_LRG_subcatalogs.py first.
-bdir_MaPar = '/pscratch/sd/n/nsailer/MaPar/'
 
 from scipy.special import erfc
 import numpy as np
@@ -21,7 +20,7 @@ catalog_s3 = get_catalog(3)
 catalog_s4 = get_catalog(4)
 
 # load dn/dz
-xxx = np.genfromtxt(bdir_MaPar+'data/LRG_dNdz.txt')
+xxx = np.genfromtxt('../data/LRG_dNdz.txt')
 z = xxx[:,0]
 dN_dz_s1 = np.array([z,xxx[:,1]]).T
 dN_dz_s2 = np.array([z,xxx[:,2]]).T
