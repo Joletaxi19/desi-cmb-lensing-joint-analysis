@@ -1,3 +1,9 @@
+# Angular number densities per z bin ("number per bin")
+# i.e., the number of galaxies per sq.deg. that have zmin<z<zmax.
+# Values reflect weighted averages of north+south weighted by area
+# (with the north and south having weights of 1 and 2.2, respectively).
+# Both imaging and spectroscopic weights are included.
+#
 # Columns are: redshift, dNdz (s1), dNdz (s2), ...
 5.000000000000000104e-03 1.000000000000000021e-03 1.000000000000000021e-03 1.000000000000000021e-03 1.000000000000000021e-03
 1.499999999999999944e-02 1.000000000000000021e-03 1.000000000000000021e-03 1.000000000000000021e-03 1.000000000000000021e-03
