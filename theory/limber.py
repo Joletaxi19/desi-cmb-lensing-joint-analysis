@@ -2,7 +2,6 @@ import numpy as np
 from scipy.integrate import simps
 from scipy.interpolate import interp1d
 from scipy.interpolate import InterpolatedUnivariateSpline as Spline
-from classy import Class
 
 #################################
 ##
@@ -106,11 +105,11 @@ def limberWithEvolution(chi, WA, WB, pAB, chiEdges):
 ##
 ####################################
 
-class galKapCl():
+class limb():
    """
    A class for computing Cgg and Ckg.
 
-   BETTER DESCRIPTION TO COME
+   MORE DOCS TO COME
    
    ...
    
@@ -129,7 +128,8 @@ class galKapCl():
    """
    
    def __init__(self, dNdz_fname, zmin=0.001, zmax=5., Nz=500,
-                      Pgm=None, Pgg=None, Pmm=None, thy_fid={}):
+                      Pgm=None, Pgg=None, Pmm=None, 
+                      background=None, thy_fid={}):
       """
       Parameters
       ----------
@@ -155,23 +155,38 @@ class galKapCl():
       norm       = simps(self.dNdz, x=self.z, axis=0)     # (Ng) ndarray
       norm       = self.gridMe(norm)
       self.dNdz /= norm
-      # compute effective redshifts (for Pgg about the fiducial cosmology)  
+      # store theory predictions 
+      self.Pgm         = Pgm
+      self.Pgg         = Pgg
+      self.Pmm         = Pmm
+      self._background = background
+      # and fiducial cosmology
       self.thy_fid = thy_fid
-      OmM,chistar,Ez,chi = self.background(thy_fid)
+      self.computeZeff()
+      
+   @property     
+   def background(self):
+      return self._background
+      
+   @background.setter
+   def background(self, newBackground):
+      self._background = newBackground
+      self.computeZeff()
+      
+   def computeZeff(self):
+      if self._background is None: self.zeff = None
+      # compute effective redshifts (for Pgg about the fiducial cosmology)  
+      OmM,chistar,Ez,chi = self._background(thy_fid,self.z)
       Wk,Wg_clust,Wg_mag = self.projectionKernels(thy_fid)
       zeff = lambda i: effectiveRedshift(chi, Wg_clust[:,i], Wg_clust[:,i], self.z)
       self.zeff = np.array([zeff(i) for i in range(self.Ng)])
-      # store theory prediction 
-      self.Pgm  = Pgm
-      self.Pgg  = Pgg
-      self.Pmm  = Pmm
 
 
    def gridMe(self,x):
       """
       Places input on a (Nz,Ng) grid. If x is z-independent, 
       repeats Ng times. If x is galaxy-independent, repeats 
-      Nz times. If x is a float, repeats (Nz,Ng) times. 
+      Nz times. If x is a float, repeats  Nz*Ng times. 
       
       Parameters
       ----------
@@ -241,7 +256,7 @@ class galKapCl():
       thy_args: dict
          inputs to CLASS for computing background quantities
       """
-      OmM,chistar,Ez,chi = self.background(thy_args)
+      OmM,chistar,Ez,chi = self._background(thy_args,self.z)
       H0                 = 100./299792.458 # [h/Mpc] units
       ## CMB lensing
       Wk  = 1.5*OmM*H0**2.*(1.+self.z)
