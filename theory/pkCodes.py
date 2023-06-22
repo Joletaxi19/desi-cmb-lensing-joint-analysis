@@ -4,12 +4,6 @@
 # These methods return power spectrum tables, which are then multiplied by biases, 
 # counterterms, etc. to return the full theory prediction.
 #
-# Improvement that I could make -- the brute-force velocileptors prediction should 
-# be wrapped in a class that cleverly only recomputes tables if the cosmology 
-# changes (and you don't have to recompute the PT integrals for Pmm and Pgm).
-# Practically though, we'll emulate the velocileptor predictions...so it's not 
-# clear that I have to be fancy in the end, since galKapCl.py is designed to have 
-# modular (Pgm,Pmm,Pgg) predictions.
 #
 # Currently wrapped:
 # - Pgg with velocileptors
@@ -74,8 +68,11 @@ def pggVelocileptors(thy_args,z,k=None):
    Returns a Pgg table with shape (Nk,15).
    The first column is k, while the remaining 
    14 have monomial coefficients:
-   [k, 1, b1, b1**2, b2, b1*b2, b2**2, bs, 
-   b1*bs, b2*bs, bs**2, b3, b1*b3, N0, alpha0]
+   [1, b1, b1**2, b2, b1*b2, b2**2, bs, b1*bs, 
+   b2*bs, bs**2, b3, b1*b3, N0, alpha0]
+
+   Uses pk_cb_lin as the input linear power
+   spectrum. 
 
    Parameters
    ----------
@@ -89,13 +86,13 @@ def pggVelocileptors(thy_args,z,k=None):
    """
    if k is None: k = ks
    cosmo = getCosmo(thy_args)
-   h = cosmo.h()
+   h     = cosmo.h()
    klin  = np.logspace(-3,np.log10(20.),4000)
    plin  = np.array([cosmo.pk_cb_lin(kk*h,z)*h**3 for kk in klin])
    cleft = CLEFT(klin,plin,cutoff=5.)
    cleft.make_ptable(kmin=min(k),kmax=max(k),nk=len(k))
-   kout,za = cleft.pktable[:,0],cleft.pktable[:,13]   
-   res = np.zeros((len(kout),17))
+   kout,za    = cleft.pktable[:,0],cleft.pktable[:,13]   
+   res        = np.zeros((len(kout),17))
    res[:,:13] = cleft.pktable[:,:13]
    res[:,13]  = np.ones_like(kout)
    res[:,14]  = -0.5*kout**2*za
@@ -107,7 +104,11 @@ def pgmVelocileptors(thy_args,z,k=None):
    Returns a Pgm table with shape (Nk,7).
    The first column is k, while the remaining 
    6 have monomial coefficients:
-   [k, 1, b1, b2, bs, b3, alphaX]
+   [1, b1, b2, bs, b3, alphaX]
+   
+   Uses sqrt(pk_cb_lin * pk_lin) as the input
+   linear power spectrum to account for 
+   neutrinos [2204.10392].
 
    Parameters
    ----------
@@ -121,15 +122,15 @@ def pgmVelocileptors(thy_args,z,k=None):
    """
    if k is None: k = ks
    cosmo = getCosmo(thy_args)
-   h = cosmo.h()
-   klin  = np.logspace(-3,np.log10(20.),4000)
+   h     = cosmo.h()
+   klin  = np.logspace(-3,np.log10(20.),4000) # more ks are cheap
    plin  = np.array([cosmo.pk_cb_lin(kk*h,z)*h**3 for kk in klin])
    plin *= np.array([cosmo.pk_lin(kk*h,z)*h**3 for kk in klin])
    plin  = np.sqrt(plin)
    cleft = CLEFT(klin,plin,cutoff=5.)
    cleft.make_ptable(kmin=min(k),kmax=max(k),nk=len(k))
-   kout,za = cleft.pktable[:,0],cleft.pktable[:,13]
-   res = np.zeros((len(kout),7))
+   kout,za  = cleft.pktable[:,0],cleft.pktable[:,13]
+   res      = np.zeros((len(kout),7))
    res[:,0] = kout                     # k
    res[:,1] = cleft.pktable[:,1 ]      # 1
    res[:,2] = cleft.pktable[:,2 ]/2.   # b1
