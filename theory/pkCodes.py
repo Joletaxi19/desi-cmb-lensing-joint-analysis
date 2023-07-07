@@ -9,6 +9,7 @@
 # - Pgg with velocileptors
 # - Pgm with velocileptors
 # - Pmm with HaloFit
+# - Pmm with Aemulus emulator
 
 # ingredients
 import numpy as np
@@ -30,7 +31,7 @@ def getCosmo(thy_args):
    thy_args: dict
       cosmological inputs to CLASS
    """
-   params = {'output': 'mPk','P_k_max_h/Mpc': 20.,'non linear':'halofit','z_pk': '0.0,10',
+   params = {'output': 'mPk','P_k_max_h/Mpc': 20.,'non linear':'halofit','z_pk': '0.0,20',
              'N_ur': 1.0196,'N_ncdm': 2,'m_ncdm': '0.01,0.05'}
    cosmo = Class()
    cosmo.set(params)
@@ -50,7 +51,7 @@ def pmmHalofit(thy_args,z,k=None):
    ----------
    thy_args: dict
       cosmological inputs to CLASS
-   z: float
+   z: float OR ndarray
       redshift
    k: ndarray, optional
       wavevectors [h/Mpc] on which to evaluate
@@ -59,8 +60,10 @@ def pmmHalofit(thy_args,z,k=None):
    if k is None: k = ks
    cosmo = getCosmo(thy_args)
    h = cosmo.h()
-   Pk = np.array([cosmo.pk(kk*h,z)*h**3 for kk in k])
-   return np.array([k,Pk]).T
+   Pk = lambda zz: np.array([cosmo.pk(kk*h,zz)*h**3 for kk in k])
+   if isinstance(z, (np.floating, float)): return np.array([k,Pk(z)]).T
+   else: res = [Pk(zz) for zz in z]
+   return np.array([k]+res).T
 
    
 def pggVelocileptors(thy_args,z,k=None):
@@ -139,11 +142,46 @@ def pgmVelocileptors(thy_args,z,k=None):
    res[:,5] = cleft.pktable[:,11]/2.   # b3
    res[:,6] = -0.5*kout**2*za          # alphaX
    return res
-
    
-def pggHEFT(thy_args,z,k=None):
-   return "to be implemented"
-
    
-def pgmHEFT(thy_args,z,k=None):
-   return "to be implemented"
+import jax.numpy as jnp
+# OBVIOUSLY NEED TO REMOVE HARD-CODED PATH
+# IN FAVOR OF PIP INSTALLATION. HOWEVER, 
+# THE CURRENT GITHUB DOESN'T HAVE NN WEIGHTS
+# AND ALSO IS NOT JAX-COMPATIBLE, WHICH IS WHY I'm 
+# LOADING MY OWN REPO (GOT WEIGHTS FROM JOE, AND 
+# MODIFIED heft_emu -> heft_emu_jax)
+import sys
+sys.path.append('/home/noah/Berkeley/aemulus_heft') # running on my laptop since perlmutter is a pos
+from aemulus_heft.heft_emu_jax import NNHEFTEmulator
+
+nnemu = NNHEFTEmulator()
+
+def pmmHEFT(thy_args,z):
+   """
+   """
+   omb,omc,ns,As,H0 = thy_args
+   #cosmo = jnp.array([[omb, omc, -1., ns, As, H0, 0.06, zz] for zz in z])
+   cosmo = jnp.zeros((len(z),8))
+   cosmo = cosmo.at[:,-1].set(z)
+   cosmo = cosmo.at[:,:-1].set([omb, omc, -1., ns, As, H0, 0.06])
+   k_nn, spec_heft_nn = nnemu.predict(cosmo)
+   res = jnp.zeros((len(k_nn),len(z)+1))
+   res = res.at[:,0].set(k_nn)
+   #for i in range(len(z)): res = res.at[:,i+1].set(spec_heft_nn[i,0,:])
+   res = res.at[:,1:].set(jnp.swapaxes(spec_heft_nn[:,0,:],0,1))
+   return res
+
+def ptableHEFT(thy_args,z):
+   """
+   CURRENTLY RETURNING ALL MONOMIALS, NOT APPROPRIATE FOR
+   PGM OR PMM, BUT GOOD ENOUGH FOR TESTING CODE
+   """
+   omb,omc,ns,As,H0 = thy_args
+   cosmo = jnp.atleast_2d([omb, omc, -1., ns, As, H0, 0.06, z])
+   k_nn, spec_heft_nn = nnemu.predict(cosmo)
+   Nmono = spec_heft_nn.shape[1]
+   res = jnp.zeros((len(k_nn),Nmono+1))
+   res = res.at[:,0].set(k_nn)
+   for i in range(Nmono): res = res.at[:,i+1].set(spec_heft_nn[0,i,:])
+   return res
