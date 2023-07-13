@@ -39,10 +39,11 @@ import jax.numpy as jnp
    
 def analyticBackground(thy_args, zs):
    """
+   Assumes thy_args[:5] = omb,omc,ns,As,H0
    TO DO: MAKE THIS MORE ACCURATE, BUT FOR NOW 
    THIS IS FINE FOR TESTING CODE
    """
-   omb,omc,ns,As,H0 = thy_args
+   omb,omc,ns,As,H0 = thy_args[:5]
    OmM = (omb+omc)/(H0/100.)**2.
    def E_z(z): return jnp.sqrt(OmM*(1.+z)**3. + (1.-OmM))
    Ez = E_z(zs)

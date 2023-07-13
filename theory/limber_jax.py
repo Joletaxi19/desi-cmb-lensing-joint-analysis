@@ -1,3 +1,8 @@
+# July 11 2023
+# interpGrid returns nans when the input has shape (Nk,2)
+# (aka only one monomial)
+# and I'm not sure why
+
 import jax.numpy as np
 from   jax import jit
 from   jax.scipy.interpolate import RegularGridInterpolator as RGI
@@ -249,6 +254,7 @@ class limb():
       self.evaluate(thy_fid)          ; print(datetime.now().strftime("%H:%M:%S"),': evaluate compiled')
       self.computeCkg(0,thy_fid)      ; print(datetime.now().strftime("%H:%M:%S"),': computeCkg compiled')
       self.computeCgg(0,thy_fid)      ; print(datetime.now().strftime("%H:%M:%S"),': computeCgg compiled')
+      self.computeCggCkg(0,thy_fid)      ; print(datetime.now().strftime("%H:%M:%S"),': computeCggCkg compiled')
       print('----------------------')
       print('Finished compilations, ready to calculate!')
 
@@ -369,9 +375,12 @@ class limb():
          Ckg_clust = Ckg_clust.at[:,j].set(Ckg_mono)
           
       # magnification contribution
-      PmmIntrp = interpGrid(Pmm_eval,kgrid)                  # kgrid.shape + (Nz,) ndarray
-      Pgrid    = np.diagonal(PmmIntrp,axis1=0,axis2=2).T     # kgrid.shape ndarray
-      Ckg_mag  = limberIntegral(chi, Wk, Wg_mag[:,i], Pgrid)
+      #PmmIntrp = interpGrid(Pmm_eval,kgrid)                  # kgrid.shape + (Nz,) ndarray
+      #Pgrid    = np.diagonal(PmmIntrp,axis1=0,axis2=2).T     # kgrid.shape ndarray
+      #Ckg_mag  = limberIntegral(chi, Wk, Wg_mag[:,i], Pgrid)
+      # cheat to speed things up
+      Pgrid    = interpGrid(Pmm_eval[:,:3],kgrid)[:,:,0] # kgrid.shape
+      Ckg_mag  = limberIntegral(chi, Wk * Pmm_eval[1,1:]/Pmm_eval[1,1], Wg_mag[:,i], Pgrid)
       
       return Ckg_clust, Ckg_mag
 
@@ -425,8 +434,63 @@ class limb():
          Cgg_mag_lin = Cgg_mag_lin.at[:,j].set(2.*Cgg_mono)
 
       # (quadratic) magnification contribution
-      PmmIntrp     = interpGrid(Pmm_eval,kgrid)                 # kgrid.shape + (Nz,) ndarray
-      Pgrid        = np.diagonal(PmmIntrp,axis1=0,axis2=2).T    # kgrid.shape ndarray
-      Cgg_mag_quad = limberIntegral(chi, Wg_mag, Wg_mag, Pgrid)
-      
+      #PmmIntrp     = interpGrid(Pmm_eval,kgrid)                 # kgrid.shape + (Nz,) ndarray
+      #Pgrid        = np.diagonal(PmmIntrp,axis1=0,axis2=2).T    # kgrid.shape ndarray
+      # cheat to speed things up
+      Pgrid    = interpGrid(Pmm_eval[:,:3],kgrid)[:,:,0] # kgrid.shape
+      Cgg_mag_quad = limberIntegral(chi, Wg_mag * Pmm_eval[1,1:]/Pmm_eval[1,1], Wg_mag, Pgrid)
+             
       return Cgg_clust, Cgg_mag_lin, Cgg_mag_quad
+      
+      
+   @partial(jit, static_argnums=(0,))   
+   def computeCggCkg(self, i, thy_args):
+      """
+      """
+      # Evaluate projection kernels and power spectra.
+      # The "kgrid" is defined such that kgrid[i,j] = (l[j]+0.5)/chi(z[i])
+      chi,Wk,Wg_clust,Wg_mag,Pgm_eval,Pgg_eval,Pmm_eval = self.evaluate(thy_args)                 
+      kgrid = (np.tile(self.l+0.5,self.Nz)/np.repeat(chi,self.Nl)).reshape((self.Nz,self.Nl))
+      
+            
+      Wg_clust   = Wg_clust[:,i]        # (Nz) ndarray
+      Wg_mag     = Wg_mag[:,i]          # (Nz) ndarray
+      PggTable   = Pgg_eval[i]          # (Nk,1+Nmono_auto) ndarray
+      PgmTable   = Pgm_eval[i]          # (Nk,1+Nmono_cros) ndarray
+      Nmono_auto = PggTable.shape[1]-1  # number of monomials for auto
+      Nmono_cros = PgmTable.shape[1]-1  # number of monomials for cross
+      
+      # interpolate
+      PggIntrp  = interpGrid(PggTable,kgrid) # kgrid.shape + (Nmono_auto,) ndarray
+      PgmIntrp    = interpGrid(PgmTable,kgrid) # kgrid.shape + (Nmono_cros,) ndarray
+      Pgrid    = interpGrid(Pmm_eval[:,:3],kgrid)[:,:,0] # kgrid.shape
+      
+      ##### Cgg
+      
+      # "clustering contribution"
+      Cgg_clust = np.zeros((self.Nl,Nmono_auto))
+      for j in range(Nmono_auto):
+         Cgg_mono  = limberIntegral(chi, Wg_clust, Wg_clust, PggIntrp[:,:,j])
+         Cgg_clust = Cgg_clust.at[:,j].set(Cgg_mono)
+         
+      # (linear) magnification contribution
+      Cgg_mag_lin = np.zeros((self.Nl,Nmono_cros))
+      for j in range(Nmono_cros):
+         Cgg_mono    = limberIntegral(chi, Wg_clust, Wg_mag, PgmIntrp[:,:,j])
+         Cgg_mag_lin = Cgg_mag_lin.at[:,j].set(2.*Cgg_mono)
+
+      # (quadratic) magnification contribution
+      Cgg_mag_quad = limberIntegral(chi, Wg_mag * Pmm_eval[1,1:]/Pmm_eval[1,1], Wg_mag, Pgrid)
+      
+      ##### Ckg
+      
+      # "clustering contribution"
+      Ckg_clust = np.zeros((self.Nl,Nmono_cros))
+      for j in range(Nmono_cros):
+         Ckg_mono  = limberIntegral(chi, Wk, Wg_clust, PgmIntrp[:,:,j])
+         Ckg_clust = Ckg_clust.at[:,j].set(Ckg_mono)
+          
+      # magnification contribution
+      Ckg_mag  = limberIntegral(chi, Wk * Pmm_eval[1,1:]/Pmm_eval[1,1], Wg_mag, Pgrid)
+      
+      return Cgg_clust, Cgg_mag_lin, Cgg_mag_quad, Ckg_clust, Ckg_mag
