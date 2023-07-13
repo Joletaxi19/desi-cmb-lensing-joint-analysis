@@ -159,29 +159,77 @@ nnemu = NNHEFTEmulator()
 
 def pmmHEFT(thy_args,z):
    """
+   Assumes thy_args[:5] = [omb,omc,ns,As,H0] and z = ndarray
+   
+   Returns res = (Nk,1+Nz) table where the first column is k and the
+   remaining Nz columns are the matter power spectrum evaluated
+   at each z.
    """
-   omb,omc,ns,As,H0 = thy_args
-   #cosmo = jnp.array([[omb, omc, -1., ns, As, H0, 0.06, zz] for zz in z])
+   omb,omc,ns,As,H0 = thy_args[:5]
    cosmo = jnp.zeros((len(z),8))
    cosmo = cosmo.at[:,-1].set(z)
    cosmo = cosmo.at[:,:-1].set([omb, omc, -1., ns, As, H0, 0.06])
    k_nn, spec_heft_nn = nnemu.predict(cosmo)
    res = jnp.zeros((len(k_nn),len(z)+1))
    res = res.at[:,0].set(k_nn)
-   #for i in range(len(z)): res = res.at[:,i+1].set(spec_heft_nn[i,0,:])
    res = res.at[:,1:].set(jnp.swapaxes(spec_heft_nn[:,0,:],0,1))
    return res
 
 def ptableHEFT(thy_args,z):
    """
-   CURRENTLY RETURNING ALL MONOMIALS, NOT APPROPRIATE FOR
-   PGM OR PMM, BUT GOOD ENOUGH FOR TESTING CODE
+   Assumes thy_args[:5] = [omb,omc,ns,As,H0] and z = float
+   
+   Returns monomial table = (Nk,1+Nmono) ndarray. The first column is k, 
+   while the order of the 15 monomials is:
+   
+   1-1, 1-cb, cb-cb, delta-1, delta-cb, delta-delta, delta2-1, delta2-cb, 
+   delta2-delta, delta2-delta2, s2-1, s2-cb, s2-delta, s2-delta2, s2-s2.
    """
-   omb,omc,ns,As,H0 = thy_args
+   omb,omc,ns,As,H0 = thy_args[:5]
    cosmo = jnp.atleast_2d([omb, omc, -1., ns, As, H0, 0.06, z])
    k_nn, spec_heft_nn = nnemu.predict(cosmo)
    Nmono = spec_heft_nn.shape[1]
    res = jnp.zeros((len(k_nn),Nmono+1))
    res = res.at[:,0].set(k_nn)
-   for i in range(Nmono): res = res.at[:,i+1].set(spec_heft_nn[0,i,:])
+   res = res.at[:,1:].set(jnp.swapaxes(spec_heft_nn[0,:,:],0,1))
+   #for i in range(Nmono): res = res.at[:,i+1].set(spec_heft_nn[0,i,:])
+   return res
+   
+def pgmHEFT(thy_args,z):
+   """
+   Assumes thy_args = [omb,omc,ns,As,H0,b1,b2,bs] and z = float
+   
+   Returns res = (Nk,3) ndarray, where the first column is k, the second column
+   is the "bias contribution" (i.e. terms that cannot be analytically 
+   marginalized over), while the third column is k^2 P_{cb, 1}
+   
+   The full prediction is res[:,1] + alpha_x * res[:,2]
+   """
+   omb,omc,ns,As,H0,b1,b2,bs = thy_args
+   bterms_gm = jnp.array([0, 1, 0, b1, 0, 0, 0.5*b2, 0, 0, 0, bs, 0, 0, 0, 0])
+   T   = ptableHEFT(thy_args[:5],z)
+   res = jnp.zeros((T.shape[0],3))
+   res = res.at[:,0].set(T[:,0])
+   res = res.at[:,1].set( jnp.dot(T[:,1:],bterms_gm) ) # bias-contribution
+   res = res.at[:,2].set(-0.5 * T[:,0]**2 * T[:,1])    # counterterm
+   return res
+   
+def pggHEFT(thy_args,z):
+   """
+   Assumes thy_args = [omb,omc,ns,As,H0,b1,b2,bs] and z = float
+   
+   Returns res = (Nk,4) ndarray, where the first column is k, the second column
+   is the "bias contribution" (i.e. terms that cannot be analytically 
+   marginalized over), the third column is k^2 P_{cb, cb}, while the 
+   fourth column is the shot noise contribution (ones)
+   
+   The full prediction is res[:,1] + alpha_0 * res[:,2] + SN * res[:,3]
+   """
+   omb,omc,ns,As,H0,b1,b2,bs = thy_args
+   bterms_gg = jnp.array([0, 0, 1, 0, 2*b1, b1**2, 0, b2, b2*b1, 0.25*b2**2, 0, 2*bs, 2*bs*b1, bs*b2, bs**2])
+   T   = ptableHEFT(thy_args[:5],z)
+   res = jnp.ones((T.shape[0],4))
+   res = res.at[:,0].set(T[:,0])
+   res = res.at[:,1].set( jnp.dot(T[:,1:],bterms_gg) ) # bias-contribution
+   res = res.at[:,2].set(-0.5 * T[:,0]**2 * T[:,2])    # counterterm
    return res

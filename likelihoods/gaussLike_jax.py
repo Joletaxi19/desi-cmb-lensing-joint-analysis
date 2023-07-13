@@ -1,5 +1,4 @@
-import numpy as np
-from math import isinf
+import jax.numpy as np
 
 class gaussLike():
    """
@@ -67,7 +66,12 @@ class gaussLike():
       self.dat        = dat
       self.cov        = cov
       self.cinv       = np.linalg.inv(cov)
-      self.det        = np.linalg.det(2*np.pi*cov)
+      # Instead of taking log(det(...)), which often results in 
+      # numerical overflows and errors, we instead do sum(log(eigavls)).
+      # We use eigvalsh as opposed to eigvals since cov is symmetric.
+      # Also, pyhmc crashes when eigvals is used for some reason. 
+      # (maybe it can't handle complex numbers, even intermediately?)
+      self.logdet     = np.sum(np.log(np.linalg.eigvalsh(2*np.pi*cov))) 
       self.thy        = thy
       self.tmp_priors = tmp_priors
       self.D          = len(dat)
@@ -124,10 +128,10 @@ class gaussLike():
       
       delt  = full_thy - self.dat
       chi2  = np.dot(delt,np.dot(self.cinv,delt))
-      like  = np.exp(-0.5*chi2)/self.det**0.5
+      like  = np.exp(-0.5*chi2)#/self.det**0.5
       like *= self.templatePrior(tmp_prm)
       res = np.log(like)
-      if (isinf(res) and res < 0): res = -1e20
+      #if (isinf(res) and res < 0): res = -1e20
       return res
 
     
@@ -151,15 +155,15 @@ class gaussLike():
          s += " when there are no templates"
          raise RuntimeError(s)
        
-      thy_tmps = self.thy(**thy_args)  
+      thy_tmps = self.thy(thy_args)  
       A = thy_tmps[:,0]
       B = thy_tmps[:,1:]
       delt = A - self.dat
       CphiInv = np.diag(self.tmp_priors[:,1]**-2.)
       Minv = CphiInv + np.dot(B.T,np.dot(self.cinv,B))
       M = np.linalg.inv(Minv)
-      V = [np.dot(B[:,i],np.dot(self.cinv,delt)) for i in range(self.T)]
-      V = np.array(V) - np.dot(CphiInv,self.tmp_priors[:,0])
+      V = np.array([np.dot(B[:,i],np.dot(self.cinv,delt)) for i in range(self.T)])
+      V = V - np.dot(CphiInv,self.tmp_priors[:,0])
       return delt,M,V
       
       
@@ -178,12 +182,11 @@ class gaussLike():
       delt,M,V = self.anaHelp(thy_args)
       
       prefac  = self.templatePrior(np.zeros(self.T))
-      prefac *= (np.linalg.det(2*np.pi*M) / self.det)**0.5
       chi2    = np.dot(delt,np.dot(self.cinv,delt))
-      chi2   -= np.dot(V,np.dot(M,V))
-      like    = prefac*np.exp(-0.5*chi2)
-      res = np.log(like)
-      if (isinf(res) and res < 0): res = -1e20
+      chi2    = chi2-np.dot(V,np.dot(M,V))
+      eigvals = np.linalg.eigvalsh(2*np.pi*M)
+      res     = np.log(prefac) - 0.5*self.logdet + 0.5*np.sum(np.log(eigvals)) - 0.5*chi2 
+
       return res
    
       
