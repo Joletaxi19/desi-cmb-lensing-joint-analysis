@@ -146,7 +146,7 @@ def pseudo_cl(nside=1024,LperBin=75,lmax=1000,isamp=1):
     #
     sn,ns  = 5.5e-07,2048   # For LRGs.
     if isamp==0: sn = 6.027057e-07
-    if isamp==1: sn = 4.019633e-06
+    if isamp==1: sn = 4.075676e-06
     if isamp==2: sn = 2.242553e-06
     if isamp==3: sn = 2.069106e-06
     if isamp==4: sn = 2.263650e-06
