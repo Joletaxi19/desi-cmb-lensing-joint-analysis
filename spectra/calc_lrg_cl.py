@@ -147,10 +147,9 @@ def pseudo_cl(nside=1024,LperBin=75,lmax=1000,isamp=1):
     sn,ns  = 5.5e-07,2048   # For LRGs.
     if isamp==0: sn = 6.027057e-07
     if isamp==1: sn = 4.075676e-06
-    if isamp==2: sn = 2.242553e-06
-    if isamp==3: sn = 2.069106e-06
-    if isamp==4: sn = 2.263650e-06
-    if isamp==24: sn = 2.181369e-06
+    if isamp==2: sn = 2.252597e-06
+    if isamp==3: sn = 2.055251e-06
+    if isamp==4: sn = 2.251705e-06
     pixwin = hp.pixwin(ns)
     pixwin = np.interp(np.arange(wla.shape[1]),\
                        np.arange(3*ns),pixwin,right=0.5)
