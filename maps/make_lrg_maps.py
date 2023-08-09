@@ -108,6 +108,7 @@ if __name__=="__main__":
         flog.write("Cutting on STARDENS<{:f}\n".format(star_cut))
         flog.write("Star map ud_graded to Nside={:d}\n\n".format(stars_nside))
         flog.write("Data file path: "+db+"\n")
+        flog.write("Data file name: "+fn+"\n")
         flist = glob.glob(db+fn)
         flist = sorted(flist)
         flog.write("Will read {:d} data files...\n".format(len(flist)))
