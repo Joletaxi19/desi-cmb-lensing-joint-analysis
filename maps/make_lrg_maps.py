@@ -160,7 +160,7 @@ if __name__=="__main__":
     version = '0.49.0'
     #
     mb  = '/global/cfs/cdirs/desi/users/rongpu/desi_mask/randoms/lrgmask_v1.1/'
-    rb  = '/global/cfs/cdirs/desi/public/etc/target/catalogs/'
+    rb  = '/global/cfs/cdirs/desi/public/ets/target/catalogs/'
     rb += release+'/'+version+'/randoms/resolve/'
     if rank==0:
         flog.write("Mask   file path: "+mb+"\n")
