@@ -23,10 +23,8 @@ def classyBackground(thy_args, zs):
    zs: list OR ndarray
       redshifts to evaluate chi(z) and E(z) 
    """
-<<<<<<< HEAD
    cosmo = Class()
    cosmo.set(thy_args)
-=======
    omb,omc,ns,ln10As,H0,Mnu = thy_args[:6]
              
    params = {'A_s': 1e-10*np.exp(ln10As),'n_s': ns,'h': H0/100., 
@@ -35,7 +33,6 @@ def classyBackground(thy_args, zs):
    
    cosmo = Class()
    cosmo.set(params)
->>>>>>> 42ed741 (mask making scripts)
    cosmo.compute()
    
    OmM     = cosmo.Omega0_m()
@@ -45,37 +42,3 @@ def classyBackground(thy_args, zs):
    chi     = np.vectorize(cosmo.comoving_distance)(zs)*cosmo.h()
    
    return OmM,chistar,Ez,chi
-<<<<<<< HEAD
-   
-=======
-
-# old code that I might delete later
-'''
->>>>>>> 42ed741 (mask making scripts)
-import jax.numpy as jnp
-   
-def analyticBackground(thy_args, zs):
-   """
-   Assumes thy_args[:5] = omb,omc,ns,As,H0
-   TO DO: MAKE THIS MORE ACCURATE, BUT FOR NOW 
-   THIS IS FINE FOR TESTING CODE
-   """
-   omb,omc,ns,As,H0 = thy_args[:5]
-   OmM = (omb+omc)/(H0/100.)**2.
-   def E_z(z): return jnp.sqrt(OmM*(1.+z)**3. + (1.-OmM))
-   Ez = E_z(zs)
-   # chistar obviously depends on cosmology, 
-   # but for now let's ignore that for the sake of testing
-   chistar = 9400. 
-   #def chi_z(z):
-   #   zint = jnp.linspace(0.,z,50)
-   #   return jnp.trapz(2997.92458/E_z(zint),zint)
-   #chi = jnp.array([chi_z(z) for z in zs])
-
-   # not even close, just want it to be fast for now
-   chi = 1000.*zs
-   return OmM,chistar,Ez,chi
-<<<<<<< HEAD
-=======
-'''
->>>>>>> 42ed741 (mask making scripts)
