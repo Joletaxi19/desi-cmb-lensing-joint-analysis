@@ -1,5 +1,6 @@
 import numpy as np
 from scipy.integrate   import simps
+<<<<<<< HEAD
 from scipy.interpolate import interp1d
 from scipy.interpolate import InterpolatedUnivariateSpline as Spline
 
@@ -62,6 +63,10 @@ def limberIntegral(chi, WA, WB, pAB):
 ##
 ####################################
 
+=======
+from scipy.interpolate import InterpolatedUnivariateSpline as Spline
+
+>>>>>>> 42ed741 (mask making scripts)
 class limb():
    """
    A class for computing Cgg and Ckg.
@@ -84,9 +89,13 @@ class limb():
    XXXXX
    """
    
+<<<<<<< HEAD
    def __init__(self, dNdz_fname, zmin=0.001, zmax=5., Nz=500,
                       Pgm=None, Pgg=None, Pmm=None, 
                       background=None, thy_fid={}):
+=======
+   def __init__(self, dNdz_fname, thy_fid, Pgm, Pgg, Pmm, background, lmax=1000, Nlval=64, zmin=0.001, zmax=2., Nz=50):
+>>>>>>> 42ed741 (mask making scripts)
       """
       Parameters
       ----------
@@ -105,10 +114,21 @@ class limb():
       self.zmax  = zmax
       self.Nz    = Nz
       self.z     = np.linspace(zmin,zmax,Nz)
+<<<<<<< HEAD
       # evaluate dNdz on regular grid and normalize it so 
       # that \int dN/dz dz = 1 for each galaxy sample
       self.dNdz  = interp1d(dNdz[:,0],dNdz[:,1:],axis=0,bounds_error=False,fill_value=0.)(self.z)
       self.dNdz  = self.dNdz.reshape((self.Nz,self.Ng))   # does nothing for Ng > 1
+=======
+      self.l     = np.arange(lmax+1) 
+      self.lval  = np.logspace(0,np.log10(lmax),Nlval)
+      self.Nl    = len(self.l)
+      self.Nlval = len(self.lval)
+      # evaluate dNdz on regular grid and normalize it such 
+      # that \int dN/dz dz = 1 for each galaxy sample
+      self.dNdz  = np.zeros((self.Nz,self.Ng))
+      for j in range(self.Ng): self.dNdz[:,j] = Spline(dNdz[:,0],dNdz[:,j+1],ext=1)(self.z)
+>>>>>>> 42ed741 (mask making scripts)
       norm       = simps(self.dNdz, x=self.z, axis=0)     # (Ng) ndarray
       norm       = self.gridMe(norm)
       self.dNdz /= norm
@@ -116,6 +136,7 @@ class limb():
       self.Pgm         = Pgm
       self.Pgg         = Pgg
       self.Pmm         = Pmm
+<<<<<<< HEAD
       self._background = background
       # store fiducial cosmology (and set "current cosmology" to fiducial)
       self._thy_fid  = thy_fid
@@ -156,10 +177,18 @@ class limb():
          self._thy_args = new_thy_args
 
     
+=======
+      self.background = background
+      # store fiducial cosmology and compute effective redshifts
+      self.thy_fid  = thy_fid                   
+      self.computeZeff()
+                              
+>>>>>>> 42ed741 (mask making scripts)
    def computeZeff(self):
       """
       Computes the effective redshift for each galaxy sample 
       assuming the fiducial cosmology and saves them to 
+<<<<<<< HEAD
       self.zeff, which is a (Ng) ndarray. If no background 
       theory has been supplied, sets self.zeff = None.
       """
@@ -187,12 +216,37 @@ class limb():
       self.Pmm_eval     # Pmm evaluated at each z in self.z, (Nk,1+Nz) ndarray
 
       Nmono is the number of monomials (e.g. 1, b1, b2, ...), which can in 
+=======
+      self.zeff, which is a (Ng) ndarray.
+      """
+      OmM,chistar,Ez,chi = self.background(self.thy_fid,self.z)
+      _,Wg,_             = self.projectionKernels(self.thy_fid)
+      zeff = lambda i: simps(Wg[:,i]**2*self.z/chi**2,x=chi)/simps(Wg[:,i]**2/chi**2,x=chi)
+      self.zeff = np.array([zeff(i) for i in range(self.Ng)])
+
+    
+   def evaluate(self, i, thy_args, verbose=True):
+      """
+      Computes background quantities, projection kernels,
+      and power spectra for a given cosmology. Returns
+      
+      chi          # comoving distance, (Nz) ndarray
+      Wk           # CMB lensing kernel, (Nz) ndarray
+      Wg_clust     # galaxy clustering kernels, (Nz,Ng) ndarray
+      Wg_mag       # galaxy magnification kernels, (Nz,Ng) ndarray
+      Pgm_eval     # Pgm tables at each effective z, (Ng,Nk,1+Nmono) ndarray
+      Pgg_eval     # Pgm tables at each effective z, (Ng,Nk,1+Nmono) ndarray
+      Pmm_eval     # Pmm evaluated at each z in self.z, (Nk,1+Nz) ndarray
+
+      Nmono is the number of monomials (e.g. 1, alpha0, ...), which can in 
+>>>>>>> 42ed741 (mask making scripts)
       general be different for Pgm and Pgg. The "+1" is a column of ks.
       
       Parameters
       ----------
       thy_args: type can vary according to theory codes
          cosmological inputs
+<<<<<<< HEAD
       verbose: bool, default=True
          when True, prints message when theory code 
          (Pgg, Pgm, Pmm, or background) is missing
@@ -213,6 +267,15 @@ class limb():
       # Pmm
       if self.Pmm is None: pr('No Pmm provided, skipping Pmm calculation')
       else: self.Pmm_eval = self.Pmm(thy_args,self.z)
+=======
+      """
+      OmM,chistar,Ez,chi = self.background(thy_args,self.z)
+      Wk,Wg_clust,Wg_mag = self.projectionKernels(thy_args,bkgrnd=[OmM,chistar,Ez,chi])
+      Pgm_eval = self.Pgm(thy_args,self.zeff[i])
+      Pgg_eval = self.Pgg(thy_args,self.zeff[i])
+      Pmm_eval = self.Pmm(thy_args,self.z)
+      return chi,Wk,Wg_clust,Wg_mag,Pgm_eval,Pgg_eval,Pmm_eval
+>>>>>>> 42ed741 (mask making scripts)
 
        
    def gridMe(self,x):
@@ -225,6 +288,7 @@ class limb():
       ----------
       x: float, (Nz) ndarray, OR (Ng) ndarray
          the input to be gridded
+<<<<<<< HEAD
          
       Raises
       ------
@@ -240,17 +304,28 @@ class limb():
       if len(list(x.shape))>1:
          s = 'input should only have 1 dimension'
          raise RuntimeError(s)
+=======
+      """
+      if isinstance(x,float):
+         return x*np.ones_like(self.dNdz)
+>>>>>>> 42ed741 (mask making scripts)
       N = x.shape[0]
       if N == self.Ng:
          return np.tile(x,self.Nz).reshape((self.Nz,self.Ng))
       if N == self.Nz:
          return np.repeat(x,self.Ng).reshape((self.Nz,self.Ng))
+<<<<<<< HEAD
       else: 
          s = 'input must satisfy len = self.Ng or self.Nz'
          raise RuntimeError(s)
       
       
    def projectionKernels(self, thy_args):
+=======
+      
+      
+   def projectionKernels(self, thy_args, bkgrnd=None):
+>>>>>>> 42ed741 (mask making scripts)
       """
       Computes the projection kernels [h/Mpc] for CMB lensing 
       and each galaxy sample. The CMB lensing kernel (Wk) is 
@@ -269,12 +344,18 @@ class limb():
       RuntimeError
          if self.background is None
       """
+<<<<<<< HEAD
       if self.background is None:
          s  = 'must provide a background code to compute projection kernels'
          raise RuntimeError(s)
          
       OmM,chistar,Ez,chi = self.background(thy_args,self.z)
       H0                 = 100./299792.458 # [h/Mpc] units
+=======
+      if bkgrnd is None: OmM,chistar,Ez,chi = self.background(thy_args,self.z)
+      else:              OmM,chistar,Ez,chi = bkgrnd
+      H0 = 100./299792.458 # [h/Mpc] units
+>>>>>>> 42ed741 (mask making scripts)
       ## CMB lensing
       Wk  = 1.5*OmM*H0**2.*(1.+self.z)
       Wk *= chi*(chistar-chi)/chistar
@@ -283,9 +364,13 @@ class limb():
       Wg_clust  = self.gridMe(H0*Ez) * self.dNdz  
       # magnification bias contribution
       def integrate_z_zstar(x):
+<<<<<<< HEAD
          # approximates the integral 
          # \int_z^{zstar} dz' x(z') 
          # with a Riemann sum
+=======
+         # approximates \int_z^{zstar} dz' x(z') with a Riemann sum
+>>>>>>> 42ed741 (mask making scripts)
          x = np.flip(x,axis=0)
          x = np.cumsum(x,axis=0) * (self.z[1]-self.z[0])
          return np.flip(x,axis=0)
@@ -294,6 +379,7 @@ class limb():
       Wg_mag *= self.gridMe(1.5*OmM*H0**2.*(1.+self.z))
       
       return Wk,Wg_clust,Wg_mag
+<<<<<<< HEAD
   
   
    def computeCkg(self, i, thy_args, lmax=500):
@@ -404,3 +490,69 @@ class limb():
       Cgg_mag_quad = limberIntegral(self.chi, Wg_mag, Wg_mag, Pgrid)
       
       return Cgg_clust, Cgg_mag_lin, Cgg_mag_quad
+=======
+
+
+   def computeCggCkg(self, i, thy_args, smag, ext=3):
+      """
+      """
+      # Evaluate projection kernels and power spectra.
+      # The "kgrid" is defined such that kgrid[i,j] = (l[j]+0.5)/chi(z[i])
+      chi,Wk,Wg_clust,Wg_mag,PgmT,PggT,PmmT = self.evaluate(i, thy_args)                 
+      kgrid = (np.tile(self.lval+0.5,self.Nz)/np.repeat(chi,self.Nlval)).reshape((self.Nz,self.Nlval))
+      
+      Wg_clust   = Wg_clust[:,i]    # (Nz) ndarray
+      Wg_mag     = Wg_mag[:,i]      # (Nz) ndarray
+      Nmono_auto = PggT.shape[1]-1  # number of monomials for auto
+      Nmono_cros = PgmT.shape[1]-1  # number of monomials for cross
+      
+      # interpolate
+      PggIntrp = np.zeros(kgrid.shape+(Nmono_auto,))
+      PgmIntrp = np.zeros(kgrid.shape+(Nmono_cros,))
+      for j in range(Nmono_auto): PggIntrp[:,:,j] = Spline(PggT[:,0],PggT[:,j+1],ext=ext)(kgrid)
+      for j in range(Nmono_cros): PgmIntrp[:,:,j] = Spline(PgmT[:,0],PgmT[:,j+1],ext=ext)(kgrid)
+      Pgrid = np.zeros((self.Nz,self.Nlval)) # kgrid.shape
+      for j in range(self.Nz): 
+         Pgrid[j,:] = Spline(PmmT[:,0],PmmT[:,j+1],ext=1)(kgrid[j,:])
+          
+      # assume that mono_auto = 1, auto1, auto2, ... AND ADD SHOT NOISE
+      # and that    mono_cros = 1, cros1, cros2, ...
+      Nmono_tot = 1 + Nmono_auto + (Nmono_cros-1)
+      def reshape_kernel(kernel): return np.repeat(kernel/chi**2.,self.Nlval).reshape(kgrid.shape)    
+          
+      ##### Cgg
+      Cgg = np.ones((self.Nl,Nmono_tot))
+      # the "1" piece
+      integrand  = reshape_kernel(Wg_clust**2)                  * PggIntrp[:,:,0]
+      integrand += 2*(5*smag-2)*reshape_kernel(Wg_mag*Wg_clust) * PgmIntrp[:,:,0]
+      integrand += (5*smag-2)**2*reshape_kernel(Wg_mag**2)      * Pgrid
+      integral   = simps(integrand,x=chi,axis=0)
+      Cgg[:,0]   = Spline(self.lval,integral)(self.l)
+      # the mono_auto pieces
+      for j in range(Nmono_auto-1):
+         integrand  = reshape_kernel(Wg_clust**2) * PggIntrp[:,:,j+1]
+         integral   = simps(integrand,x=chi,axis=0)
+         Cgg[:,j+1] = Spline(self.lval,integral)(self.l)
+      # adding shot noise (already ones)
+      # the mono_cros pieces
+      for j in range(Nmono_cros-1):
+         integrand = 2*(5*smag-2)*reshape_kernel(Wg_clust*Wg_mag) * PgmIntrp[:,:,j+1]
+         integral  = simps(integrand,x=chi,axis=0)
+         Cgg[:,j+1+Nmono_auto] = Spline(self.lval,integral)(self.l)
+      
+      ##### Ckg
+      Ckg = np.zeros((self.Nl,Nmono_tot))
+      # the "1" piece
+      integrand  = reshape_kernel(Wk*Wg_clust)          * PgmIntrp[:,:,0]
+      integrand += (5*smag-2)*reshape_kernel(Wk*Wg_mag) * Pgrid
+      integral   = simps(integrand,x=chi,axis=0)
+      Ckg[:,0]   = Spline(self.lval,integral)(self.l)  
+      # the mono_auto pieces are zero (including shot noise)          
+      # the mono_cros pieces
+      for j in range(Nmono_cros-1):
+         integrand = reshape_kernel(Wk*Wg_clust) * PgmIntrp[:,:,j+1]
+         integral  = simps(integrand,x=chi,axis=0) 
+         Ckg[:,j+1+Nmono_auto] = Spline(self.lval,integral)(self.l)
+          
+      return Cgg,Ckg
+>>>>>>> 42ed741 (mask making scripts)
