@@ -1,0 +1,131 @@
+theory:
+  classy:
+    extra_args: {output: '', N_ur: 2.0328, N_ncdm: 1}
+    input_params: [A_s, omega_cdm, n_s, H0, omega_b, m_ncdm]
+likelihood:
+  # supernovae
+  sn.pantheon:
+  # BAO
+  bao.sixdf_2011_bao:
+  bao.sdss_dr7_mgs:
+  bao.sdss_dr12_consensus_bao:
+  # Cgg and Ckg
+  cobaya_friendly.XcorrLike:
+    python_path: /pscratch/sd/n/nsailer/MaPar/likelihoods/
+    suffx:
+    - z1
+    - z2
+    - z3
+    - z4
+    clsfn:  
+    - /pscratch/sd/n/nsailer/MaPar/data/White21_data/lrg_s01_cls.txt
+    - /pscratch/sd/n/nsailer/MaPar/data/White21_data/lrg_s02_cls.txt
+    - /pscratch/sd/n/nsailer/MaPar/data/White21_data/lrg_s03_cls.txt
+    - /pscratch/sd/n/nsailer/MaPar/data/White21_data/lrg_s04_cls.txt
+    covfn:  /pscratch/sd/n/nsailer/MaPar/data/White21_data/lrg_multi_cov.txt-namaster
+    wlafn:  
+    - /pscratch/sd/n/nsailer/MaPar/data/White21_data/lrg_s01_wla.txt
+    - /pscratch/sd/n/nsailer/MaPar/data/White21_data/lrg_s02_wla.txt
+    - /pscratch/sd/n/nsailer/MaPar/data/White21_data/lrg_s03_wla.txt
+    - /pscratch/sd/n/nsailer/MaPar/data/White21_data/lrg_s04_wla.txt
+    wlxfn:  
+    - /pscratch/sd/n/nsailer/MaPar/data/White21_data/lrg_s01_wlx.txt
+    - /pscratch/sd/n/nsailer/MaPar/data/White21_data/lrg_s02_wlx.txt
+    - /pscratch/sd/n/nsailer/MaPar/data/White21_data/lrg_s03_wlx.txt
+    - /pscratch/sd/n/nsailer/MaPar/data/White21_data/lrg_s04_wlx.txt
+    amin: [0,0,0,0]
+    amax: [250,300,350,400]
+    xmin: [0,0,0,0]
+    xmax: [250,300,350,400]
+    dndzfn: /pscratch/sd/n/nsailer/MaPar/data/White21_data/combined_dNdz.txt
+    stop_at_error: True
+params:
+# cosmological parameters
+  ln1e10As:
+    prior: {min: 2., max: 4.}
+    ref: {dist: norm, loc: 3.05, scale: 0.03}
+    latex: \ln(10^{10}A_s)
+  A_s: "lambda ln1e10As: 1e-10*np.exp(ln1e10As)"
+  omega_cdm:
+    prior: {min: 0.08, max: 0.16}
+    ref: {dist: norm, loc: 0.12, scale: 0.01}
+    latex: \omega_c
+  n_s: 0.9667
+  H0: 67.27
+  omega_b: 0.022
+  m_ncdm: 0.06
+  OmM:
+    derived: "lambda omega_cdm, omega_b, m_ncdm, H0: (omega_cdm+omega_b)/(H0/100)**2 + m_ncdm/42.69"
+    latex: \Omega_m
+# nuisance parameters
+# z1
+  b1_z1:
+    prior: {min: 0., max: 3.}
+    ref: {dist: norm, loc: 1.25, scale: 0.05}
+    latex: b_1(z_1)
+  b2_z1:
+    prior: {min: -5., max: 5.}
+    ref: {dist: norm, loc: 0.0, scale: 1.0}
+    latex: b_2(z_1)
+  bs_z1: 0.
+  smag_z1:
+    prior: {dist: norm, loc: 0.982, scale: 0.1}
+    ref: {dist: norm, loc: 0.982, scale: 0.05}
+    latex: s_{\mu}(z_1)
+# z2
+  b1_z2:
+    prior: {min: 0., max: 3.}
+    ref: {dist: norm, loc: 1.25, scale: 0.05}
+    latex: b_1(z_2)
+  b2_z2:
+    prior: {min: -5., max: 5.}
+    ref: {dist: norm, loc: 0.0, scale: 1.0}
+    latex: b_2(z_2)
+  bs_z2: 0.
+  smag_z2:
+    prior: {dist: norm, loc: 1.033, scale: 0.1}
+    ref: {dist: norm, loc: 1.033, scale: 0.05}
+    latex: s_{\mu}(z_2)
+# z3
+  b1_z3:
+    prior: {min: 0., max: 3.}
+    ref: {dist: norm, loc: 1.25, scale: 0.05}
+    latex: b_1(z_3)
+  b2_z3:
+    prior: {min: -5., max: 5.}
+    ref: {dist: norm, loc: 0.0, scale: 1.0}
+    latex: b_2(z_3)
+  bs_z3: 0.
+  smag_z3:
+    prior: {dist: norm, loc: 0.961, scale: 0.1}
+    ref: {dist: norm, loc: 0.961, scale: 0.05}
+    latex: s_{\mu}(z_3) 
+# z4
+  b1_z4:
+    prior: {min: 0., max: 3.}
+    ref: {dist: norm, loc: 1.25, scale: 0.05}
+    latex: b_1(z_4)
+  b2_z4:
+    prior: {min: -5., max: 5.}
+    ref: {dist: norm, loc: 0.0, scale: 1.0}
+    latex: b_2(z_4)
+  bs_z4: 0.
+  smag_z4:
+    prior: {dist: norm, loc: 1.013, scale: 0.1}
+    ref: {dist: norm, loc: 1.013, scale: 0.05}
+    latex: s_{\mu}(z_4)    
+    
+sampler:
+  mcmc:
+    learn_proposal: True
+    learn_proposal_Rminus1_max: 10.
+    output_every: 60s
+    measure_speeds: false
+    max_tries: 500
+    drag: False
+    proposal_scale: 1.5
+    Rminus1_stop: 0.01
+    
+output: chains/DESIxPlanck_White21
+timing: True
+stop_on_error: True
