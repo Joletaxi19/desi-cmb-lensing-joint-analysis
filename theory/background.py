@@ -23,8 +23,6 @@ def classyBackground(thy_args, zs):
    zs: list OR ndarray
       redshifts to evaluate chi(z) and E(z) 
    """
-   cosmo = Class()
-   cosmo.set(thy_args)
    omb,omc,ns,ln10As,H0,Mnu = thy_args[:6]
              
    params = {'A_s': 1e-10*np.exp(ln10As),'n_s': ns,'h': H0/100., 
