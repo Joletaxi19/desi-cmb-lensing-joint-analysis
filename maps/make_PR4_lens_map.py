@@ -1,31 +1,20 @@
 #!/usr/bin/env python3
-#
-# Prepare the Planck (2018) lensing maps from the files provided at
-# https://pla.esac.esa.int/ cosmology products, lensing products
-# as COM_Lensing_4096_R3.00.tgz
-#
-#
+# makes the PR4 kappa map and mask in equatorial coordinates
+# after low pass filtering
+# also saves a file to ../data/PR4_lens_nlkk_filt.txt with 
+# the low pass filtered noise curves
+
 import numpy    as np
 import healpy   as hp
 import pymaster as nmt
-import os
-import urllib.request
 #
 lowpass = True
 apodize = True
-Nside=2048
-# download data 
+Nside   = 2048
 # Read the data, mask and noise properties.
-website = 'http://pla.esac.esa.int/pla/aio/product-action?COSMOLOGY.FILE_ID='
-fname   = 'COM_Lensing_4096_R3.00' #COM_Lensing-Szdeproj_4096_R3.00
-urllib.request.urlretrieve(website+fname+'.tgz', fname+'.tgz')
-os.system(f"tar -xvzf {fname}.tgz")  
-os.remove(fname+'.tgz')
-pl_klm  = hp.read_alm(f'{fname}/MV/dat_klm.fits')
-pl_mask = hp.read_map(f'{fname}/mask.fits.gz',dtype=None)
-pl_nkk  = np.loadtxt(f'{fname}/MV/nlkk.dat')
-os.system(f"rm -r {fname}")
-
+pl_klm  = np.nan_to_num(hp.read_alm('/global/cfs/cdirs/cmb/data/planck2020/PR4_lensing/PR4_klm_dat_p.fits'))
+pl_mask = hp.ud_grade(hp.read_map('/global/cfs/cdirs/cmb/data/planck2020/PR4_lensing/mask.fits.gz',dtype=None),Nside)
+pl_nkk  = np.loadtxt( '../data/PR4_lens_nlkk.txt')
 #
 if lowpass:
     # Filter the alm to remove high ell power.
@@ -34,6 +23,7 @@ if lowpass:
     xval   = (lval/lmax)**6
     filt   = np.exp(-xval)
     print("Low-pass filtering kappa.")
+    print("  : Filter at ell=600  is ",np.interp(600.,lval,filt))
     print("  : Filter at ell=1000 is ",np.interp(1e3,lval,filt))
     print("  : Filter at ell=4000 is ",np.interp(4e3,lval,filt))
     pl_klm = hp.almxfl(pl_klm,filt)
@@ -41,7 +31,7 @@ if lowpass:
     pl_nkk[:,1] *= np.interp(pl_nkk[:,0],lval,filt**2)
     pl_nkk[:,2] *= np.interp(pl_nkk[:,0],lval,filt**2)
     # and write the modified noise file.
-    with open("../data/P18_lens_nlkk_filt.txt","w") as fout:
+    with open("../data/PR4_lens_nlkk_filt.txt","w") as fout:
         fout.write("# Planck lensing noise curves.\n")
         fout.write("# These curves have been low-pass filtered.\n")
         fout.write("# {:>6s} {:>15s} {:>15s}\n".\
@@ -61,15 +51,12 @@ if apodize: # Apodsize the mask.
     #pl_mask = nmt.mask_apodization(pl_mask,apos,apotype="Smooth")
     #pl_mask = nmt.mask_apodization(pl_mask,apos,apotype="C1")
     pl_mask = nmt.mask_apodization(pl_mask,apos,apotype="C2")
-# Now write the processed maps at different Nside.
-
-pl_kappa = hp.alm2map(pl_klm,Nside)
+# Now write the processed maps.
 if lowpass:
-    outfn= 'P18_lens_kap_filt.hpx{:04d}.fits'.format(Nside)
+    outfn= 'PR4_lens_kap_filt.hpx{:04d}.fits'.format(Nside)
 else:
-    outfn= 'P18_lens_kap.hpx{:04d}.fits'.format(Nside)
-hp.write_map(outfn,pl_kappa,dtype='f4',coord='G',overwrite=True)
-outfn    = 'masks/P18_lens_msk.hpx{:04d}.fits'.format(Nside)
+    outfn= 'PR4_lens_kap.hpx{:04d}.fits'.format(Nside)
+hp.write_map(outfn,pl_kappa,dtype='f4',coord='C',overwrite=True)
+outfn    = 'masks/PR4_lens_msk.hpx{:04d}.fits'.format(Nside)
 hp.write_map(outfn,hp.ud_grade(pl_mask,Nside),dtype='f4',\
-             coord='G',overwrite=True)
-#
+             coord='C',overwrite=True)

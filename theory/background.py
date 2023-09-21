@@ -23,8 +23,19 @@ def classyBackground(thy_args, zs):
    zs: list OR ndarray
       redshifts to evaluate chi(z) and E(z) 
    """
+<<<<<<< HEAD
    cosmo = Class()
    cosmo.set(thy_args)
+=======
+   omb,omc,ns,ln10As,H0,Mnu = thy_args[:6]
+             
+   params = {'A_s': 1e-10*np.exp(ln10As),'n_s': ns,'h': H0/100., 
+             'N_ur': 2.0328,'N_ncdm': 1,'m_ncdm': Mnu,'tau_reio': 0.0568,
+             'omega_b': omb,'omega_cdm': omc}
+   
+   cosmo = Class()
+   cosmo.set(params)
+>>>>>>> 42ed741 (mask making scripts)
    cosmo.compute()
    
    OmM     = cosmo.Omega0_m()
@@ -34,7 +45,13 @@ def classyBackground(thy_args, zs):
    chi     = np.vectorize(cosmo.comoving_distance)(zs)*cosmo.h()
    
    return OmM,chistar,Ez,chi
+<<<<<<< HEAD
    
+=======
+
+# old code that I might delete later
+'''
+>>>>>>> 42ed741 (mask making scripts)
 import jax.numpy as jnp
    
 def analyticBackground(thy_args, zs):
@@ -58,3 +75,7 @@ def analyticBackground(thy_args, zs):
    # not even close, just want it to be fast for now
    chi = 1000.*zs
    return OmM,chistar,Ez,chi
+<<<<<<< HEAD
+=======
+'''
+>>>>>>> 42ed741 (mask making scripts)

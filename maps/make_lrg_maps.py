@@ -22,18 +22,12 @@ nproc= comm.Get_size()
 
 
 
-
-
-
-
 def toMag(depth,ext,ebv):
     """A 'safe' conversion of depth to magnitude."""
     dd = np.sqrt( depth.clip(1e-30,1e30) )
     mag= -2.5*(np.log10(5/dd)-9) - ext*ebv
     return(mag)
     #
-
-
 
 
 if __name__=="__main__":
@@ -296,7 +290,7 @@ if __name__=="__main__":
         flog.close()
         # Write the basic maps we always want.  Do this at multiple
         # resolutions.
-        for outnside in [256,2048]:
+        for outnside in [2048]:
             pref = "lrg_s{:02d}".format(isamp)
             hpex = ".hpx{:04d}.fits".format(outnside)
             nmap = hp.ud_grade(omap,outnside)
