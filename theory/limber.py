@@ -32,9 +32,7 @@ class limb():
    XXXXX
    """
    
-   def __init__(self, dNdz_fname, zmin=0.001, zmax=5., Nz=500,
-                      Pgm=None, Pgg=None, Pmm=None, 
-                      background=None, thy_fid={}):
+   def __init__(self, dNdz_fname, thy_fid, Pgm, Pgg, Pmm, background, lmax=1000, Nlval=64, zmin=0.001, zmax=2., Nz=50):
       """
       Parameters
       ----------
@@ -77,9 +75,8 @@ class limb():
       self.background  = background
       # store fiducial cosmology (and set "current cosmology" to fiducial)
       self._thy_fid  = thy_fid
-      # compute effective redshifts and set up fidicual kernels & power spectra        
+      # compute effective redshifts      
       self.computeZeff()
-      self.evaluate(thy_fid)
 
                           
    # Recompute effective redshifts whenever the 
@@ -98,9 +95,6 @@ class limb():
       self.zeff, which is a (Ng) ndarray. If no background 
       theory has been supplied, sets self.zeff = None.
       """
-      if self._background is None: 
-          print('No background code given, skipping zeff caclaultion.')
-          self.zeff = None ; return ''
       OmM,chistar,Ez,chi = self.background(self.thy_fid,self.z)
       _,Wg,_             = self.projectionKernels(self.thy_fid)
       def zeff(i):
