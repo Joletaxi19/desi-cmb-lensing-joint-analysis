@@ -21,20 +21,20 @@ def make_footprint_masks(NSIDE_OUT=2048, COORD_OUT='c', outdir='masks',
     if not os.path.exists(outdir): os.mkdir(outdir)
     sffx = '' if (not verbose_sffx) else f'_cord.{COORD_OUT}_nside.{NSIDE_OUT}'
 
-    # DEC and RA in galactic coords
+    # Make DEC and RA in galactic coords and 
+    # rotate to COORD_OUT coords
     npix      = 12*NSIDE_OUT**2
     theta,phi = hp.pix2ang(NSIDE_OUT,np.arange(npix))
     DEC,RA    = 90-np.degrees(theta),np.degrees(phi)
-
-    ## Make NGC/SGC masks in galactic coords
-    ## and rotate to COORD_OUT coords
-    ngc_mask = np.ones(npix)
-    ngc_mask[np.where(DEC<=0.)] = 0.
-    sgc_mask = np.ones(npix)
-    sgc_mask[np.where(DEC>0.)]  = 0.
     rot = hp.rotator.Rotator(coord=f'g{COORD_OUT}')
-    ngc_mask = np.round(rot.rotate_map_pixel(ngc_mask))
-    sgc_mask = np.round(rot.rotate_map_pixel(sgc_mask))
+    DEC = rot.rotate_map_pixel(DEC)
+    RA  = rot.rotate_map_pixel(RA)
+
+    ## Make NGC/SGC masks COORD_OUT coords
+    ngc_mask = np.ones(npix)
+    sgc_mask = np.ones(npix)
+    ngc_mask[np.where(DEC<=0.)] = 0.
+    sgc_mask[np.where(DEC>0.)]  = 0.
     hp.write_map(f'{outdir}/ngc_mask{sffx}.fits',ngc_mask,overwrite=True,dtype=np.int32)
     hp.write_map(f'{outdir}/sgc_mask{sffx}.fits',sgc_mask,overwrite=True,dtype=np.int32)
 
