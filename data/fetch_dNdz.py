@@ -35,4 +35,4 @@ z = (xxx[:,0]+xxx[:,1])/2
 decals = np.array([z,xxx[:,3],xxx[:,4],xxx[:,5],xxx[:,6]]).T
 des = np.array([z,xxx[:,8],xxx[:,9],xxx[:,10],xxx[:,11]]).T
 np.savetxt('LRG_dNdz_decals.txt',decals,header=header)
-np.savetxt('LRG_dNdz_des.txt',north,header=header)
+np.savetxt('LRG_dNdz_des.txt',des,header=header)
