@@ -1,10 +1,12 @@
-import numpy as np
+import numpy  as np
 import healpy as hp
+from   astropy.table import Table
 import urllib.request
 import os
 
 def make_footprint_masks(NSIDE_OUT=2048, COORD_OUT='c', outdir='masks', 
-                         deccuts=[-15], verbose_sffx=False):
+                         deccuts=[-15], ebvcuts=[0.05,0.1,0.15], 
+                         verbose_sffx=False):
     """
     Makes the following (binary) masks
         ngc_mask.fits          | NGC is defined as DEC >  0 
@@ -13,28 +15,34 @@ def make_footprint_masks(NSIDE_OUT=2048, COORD_OUT='c', outdir='masks',
         des_mask.fits          | DES is defined as everywhere with positive "detection 
                                  fraction" in any of the DES DR2 g,r,i,z,Y bands.
         decals_mask.fits       | (not North) and (not DES) and (DEC > -15)
-        dec[P or M]#_mask.fits | creates a mask for each # [integer] in DECcuts that 
+        dec[P or M]#_mask.fits | creates a mask for each # [integer] in deccuts that 
                                  is defined by DEC <= \PM #
-    at a given NSIDE_OUT and COORD_OUT system, and saves them to outdir/.
+        ebv_#_mask.fits        | creates a mask for each # [float] in ebvcuts that is 
+                                 is defined by EBV <= #
+    at a given NSIDE_OUT and COORD_OUT system, and saves them to outdir/. If 
+    verbose_sffx=True, appends the string "_cord.{COORD_OUT}_nside.{NSIDE_OUT}" 
+    to the end of each mask name.
     """
     
     if not os.path.exists(outdir): os.mkdir(outdir)
     sffx = '' if (not verbose_sffx) else f'_cord.{COORD_OUT}_nside.{NSIDE_OUT}'
 
-    # Make DEC and RA in galactic coords and 
+    # Make DEC and RA in celestial coords and 
     # rotate to COORD_OUT coords
     npix      = 12*NSIDE_OUT**2
     theta,phi = hp.pix2ang(NSIDE_OUT,np.arange(npix))
-    DEC,RA    = 90-np.degrees(theta),np.degrees(phi)
-    rot = hp.rotator.Rotator(coord=f'g{COORD_OUT}')
-    DEC = rot.rotate_map_pixel(DEC)
-    RA  = rot.rotate_map_pixel(RA)
+    DEC_,RA_  = 90-np.degrees(theta),np.degrees(phi)
+    rot = hp.rotator.Rotator(coord=f'c{COORD_OUT}')
+    DEC = rot.rotate_map_pixel(DEC_)
+    RA  = rot.rotate_map_pixel(RA_)
 
-    ## Make NGC/SGC masks COORD_OUT coords
-    ngc_mask = np.ones(npix)
-    sgc_mask = np.ones(npix)
-    ngc_mask[np.where(DEC<=0.)] = 0.
-    sgc_mask[np.where(DEC>0.)]  = 0.
+    ## Make NGC/SGC masks in galactic coords 
+    ## and rotate to COORD_OUT coords
+    ngc_mask = np.ones(npix) ; ngc_mask[np.where(DEC_<=0.)] = 0.
+    sgc_mask = np.ones(npix) ; sgc_mask[np.where(DEC_>0.)]  = 0.
+    rot      = hp.rotator.Rotator(coord=f'g{COORD_OUT}')
+    ngc_mask = np.round(rot.rotate_map_pixel(ngc_mask))
+    sgc_mask = np.round(rot.rotate_map_pixel(sgc_mask))
     hp.write_map(f'{outdir}/ngc_mask{sffx}.fits',ngc_mask,overwrite=True,dtype=np.int32)
     hp.write_map(f'{outdir}/sgc_mask{sffx}.fits',sgc_mask,overwrite=True,dtype=np.int32)
 
@@ -72,6 +80,21 @@ def make_footprint_masks(NSIDE_OUT=2048, COORD_OUT='c', outdir='masks',
         mask[np.where(DEC>cut)] = 0.
         sgn = 'p' if cut>=0 else 'm'
         hp.write_map(f'{outdir}/DEC{sgn}{np.abs(cut)}_mask{sffx}.fits',mask,overwrite=True,dtype=np.int32)
+        
+    ## Make EBV < X masks in COORD_OUT coords
+    version   = 0
+    colors    = 'rz'
+    nside     = 256
+    # fetch Rongpu's EBV map, which has nside=256 and is in celestial coords
+    bd        = f'/global/cfs/cdirs/desicollab/users/rongpu/data/ebv/v{version}/kp3_maps/'
+    ebv_table = Table.read(bd+f'v{version}_desi_ebv_{colors}_{nside}.fits')
+    rot       = hp.rotator.Rotator(coord=f'c{COORD_OUT}')
+    ebv_sfd   = rot.rotate_map_pixel(hp.ud_grade(ebv_table['EBV_SFD'],NSIDE_OUT))
+    for cut in np.array(ebvcuts):
+        mask = np.ones(npix)
+        mask[np.where(ebv_sfd>cut)] = 0.
+        hp.write_map(f'{outdir}/ebv_{cut:0.2f}_mask{sffx}.fits',mask,overwrite=True,dtype=np.int32)
+    
 
 if __name__ == "__main__":
     make_footprint_masks()
