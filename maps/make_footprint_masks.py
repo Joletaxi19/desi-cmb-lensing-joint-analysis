@@ -5,7 +5,7 @@ import urllib.request
 import os
 
 def make_footprint_masks(NSIDE_OUT=2048, COORD_OUT='c', outdir='masks', 
-                         deccuts=[-15], ebvcuts=[0.05,0.1,0.15], 
+                         deccuts=[-15,-30], ebvcuts=[0.05,0.1,0.15], 
                          verbose_sffx=False):
     """
     Makes the following (binary) masks
