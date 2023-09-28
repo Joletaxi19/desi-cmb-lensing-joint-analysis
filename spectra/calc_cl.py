@@ -137,10 +137,12 @@ def full_master(ledges,maps,msks,names,fnout,do_cov=False,cij=None,only_auto=Fal
     def write_outdata(outdata):
         with open(fnout, "w") as outfile:
             json.dump(outdata, outfile, indent=2)
-    # infer nside and get effective ell's 
+    # infer nside, get effective ell's and 
+    # pixel window function
     nside   = int((len(maps[0])/12)**0.5)
     bins    = get_bins(ledges,nside)
     ell     = bins.get_effective_ells()
+    pixwin  = hp.pixwin(nside)
     # load or create outdata
     if exists(fnout) and (not overwrite):
         with open(fnout) as outfile:
@@ -151,7 +153,8 @@ def full_master(ledges,maps,msks,names,fnout,do_cov=False,cij=None,only_auto=Fal
             # overwriting the entire file.
             outdata['map names'] = names
     else:
-        outdata = {'README':readme,'nside':nside,'map names':names,'ledges':ledges,'ell':ell.tolist()}
+        outdata = {'README':readme,'nside':nside,'map names':names,
+                   'ledges':ledges,'ell':ell.tolist(),'pixwin':pixwin}
     write_outdata(outdata)
     
     # define fields and workspaces
@@ -171,7 +174,7 @@ def full_master(ledges,maps,msks,names,fnout,do_cov=False,cij=None,only_auto=Fal
             outdata[wl_fname] = wl.tolist()
             outdata[cl_fname] = cl.tolist()
             write_outdata(outdata)   
-    
+
     # start working on the covariance (if applicable)
     if not do_cov: return 'all done'
     if cij is None: cij = cij_poly_approx(outdata)
