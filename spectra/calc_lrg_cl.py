@@ -153,8 +153,13 @@ def pseudo_cl(nside=1024,LperBin=75,lmax=1000,isamp=1):
     pixwin = hp.pixwin(ns)
     pixwin = np.interp(np.arange(wla.shape[1]),\
                        np.arange(3*ns),pixwin,right=0.5)
-    cgg    = sn + (cgg - sn)*np.dot(wla,1/pixwin**2)
-    ckg   *= np.dot(wlx,1/pixwin)
+    if False:
+        # Really want to do this using forward modeling,
+        # i.e. include the window function in the model
+        # where we "know" what the shot-noise is.
+        # Fudge the normalization here as well.
+        cgg = sn + (cgg - sn)*np.dot(wla,1/pixwin**2)/wla.sum(axis=1)
+        ckg*= np.dot(wlx,1/pixwin)/wlx.sum(axis=1)
     # and write the answers to file.
     with open(pref+"_cls.txt","w") as fout:
         fout.write("# Galaxy auto- and CMB lensing cross-spectra.\n")
