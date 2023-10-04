@@ -74,9 +74,9 @@ class XcorrLike(Likelihood):
         """What we require."""
         reqs = {'omega_b':None,'omega_cdm':None,'n_s':None,'ln1e10As':None,'H0':None,'m_ncdm':None}
         # Build the parameter names we require for each galaxy sample.
-        for galName in self.galNames:
+        for suf in self.galNames:
             for pref in ['b1','b2','bs','smag']:
-                reqs[pref+'_'+galName] = None
+                reqs[pref+'_'+suf] = None
         return reqs
         
     def logp(self,**params_values):
@@ -99,11 +99,11 @@ class XcorrLike(Likelihood):
         self.wla,self.wlx,self.data = pack_cl_wl(data,kapName,galNames,self.amin,self.amax,self.xmin,self.xmax)
         self.cov  =                   pack_cov(  data,kapName,galNames,self.amin,self.amax,self.xmin,self.xmax)
         self.dndz =                   pack_dndz(dndzs)
-
+        self.pixwin = np.array(data['pixwin'])
 
     def compute_full(self):
         """
-        Do the full prediction (including window function)
+        Do the full prediction (including [pixel] window functions)
         Returns a table with coefficients
         # (1, alpha_a(z1), SN(z1), alpha_x(z1), alpha_a(z2), SN(z2), alpha_x(z2), ...)
         """
@@ -117,24 +117,34 @@ class XcorrLike(Likelihood):
 
         full_pred = []
         Nls       = []
-        for i,suf in enumerate(self.suffx):
+        for i,suf in enumerate(self.galNames):
             b1   = pp.get_param('b1_'+suf)
             b2   = pp.get_param('b2_'+suf)
             bs   = pp.get_param('bs_'+suf)
             smag = pp.get_param('smag_'+suf)
             params = np.array([omb,omc,ns,As,H0,Mnu,b1,b2,bs])
+            # Cgg and Ckg are tables of shape (nell,4)
+            # where the four columns correspond to 
+            # 1, alpha_auto, shot noise, alpha_cross
             Cgg,Ckg = self.clPred.computeCggCkg(i,params,smag)
             if self.chenprior:
                 Cgg[:,1] += Cgg[:,3]/(2.*(1.+b1))
                 Ckg[:,1] += Ckg[:,3]/(2.*(1.+b1))
             Nkg = Ckg.shape[0] ; Ngg = Cgg.shape[0]
+            # correct for pixel window function
+            # shot noise is left untouched
+            pixwin_idxs = [0,1,3] 
+            for idx in pixwin_idxs:
+                Ckg[:,idx] = Ckg[:,idx]*self.pixwin[:Nkg]
+                Cgg[:,idx] = Cgg[:,idx]*self.pixwin[:Ngg]**2
+            # multiply by the "mask window"
             wx = self.wlx[i][:,:Nkg]  ; wa = self.wla[i][:,:Ngg]
             Cggkg = np.concatenate((np.dot(wa,Cgg),np.dot(wx,Ckg)))
-            # STACKING, MAKE THIS MORE GENERAL
+            # stack the data vector
             Nl,Nmon = Cggkg.shape
-            res = np.zeros((Nl,1+(Nmon-1)*4))
+            res = np.zeros((Nl,1+(Nmon-1)*self.nsamp))
             res[:,0] = Cggkg[:,0]
-            res[:,1+i*(Nmon-1):4+i*(Nmon-1)] = Cggkg[:,1:]
+            res[:,1+i*(Nmon-1):1+(i+1)*(Nmon-1)] = Cggkg[:,1:]
             full_pred.append(res)
         return np.concatenate(full_pred)
     
