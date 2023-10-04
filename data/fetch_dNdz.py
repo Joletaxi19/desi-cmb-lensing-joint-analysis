@@ -11,7 +11,7 @@ fsky_south  = fsky_decals+fsky_des
 header  = 'Angular number densities per z bin ("number per bin")\n'
 header += 'i.e., the number of galaxies per sq.deg. that have zmin<z<zmax.\n'
 header += 'Both imaging and spectroscopic weights are included.\n\n'
-header += 'Columns are: redshift, dNdz (sample 1), dNdz (sample 2), dNdz (sample 3), dNdz (sample 4)'
+header += 'Columns are: redshift, dNdz'
 
 # file location
 version = '0.4'
@@ -24,9 +24,9 @@ z = (xxx[:,0]+xxx[:,1])/2
 north = np.array([z,xxx[:,8],xxx[:,9],xxx[:,10],xxx[:,11]]).T
 south = np.array([z,xxx[:,13],xxx[:,14],xxx[:,15],xxx[:,16]]).T
 full  = (north*fsky_north+south*fsky_south)/(fsky_north+fsky_south)
-np.savetxt('LRG_dNdz_north.txt',north,header=header)
-np.savetxt('LRG_dNdz_south.txt',north,header=header)
-np.savetxt('LRG_dNdz.txt'      ,full ,header=header)
+for i in range(4): np.savetxt(f'dNdzs/LRGz{i+1}_dNdz_north.txt',north[:,[0,i+1]],header=header)
+for i in range(4): np.savetxt(f'dNdzs/LRGz{i+1}_dNdz_south.txt',south[:,[0,i+1]],header=header)
+for i in range(4): np.savetxt(f'dNdzs/LRGz{i+1}_dNdz.txt'      ,full[:,[0,i+1]] ,header=header)
 
 # DECaLS and DES regions individually
 fname   = f'main_lrg_pz_ngal_decals_des_iron_v{version}_dz_0.02.txt'
@@ -34,5 +34,5 @@ xxx = np.genfromtxt(bdir+fname)
 z = (xxx[:,0]+xxx[:,1])/2
 decals = np.array([z,xxx[:,3],xxx[:,4],xxx[:,5],xxx[:,6]]).T
 des = np.array([z,xxx[:,8],xxx[:,9],xxx[:,10],xxx[:,11]]).T
-np.savetxt('LRG_dNdz_decals.txt',decals,header=header)
-np.savetxt('LRG_dNdz_des.txt',des,header=header)
+for i in range(4): np.savetxt(f'dNdzs/LRGz{i+1}_dNdz_decals.txt',decals[:,[0,i+1]],header=header)
+for i in range(4): np.savetxt(f'dNdzs/LRGz{i+1}_dNdz_des.txt',des[:,[0,i+1]],header=header)

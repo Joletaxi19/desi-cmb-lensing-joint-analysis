@@ -3,13 +3,6 @@ from scipy.integrate   import simps
 from scipy.interpolate import interp1d
 from scipy.interpolate import InterpolatedUnivariateSpline as Spline
     
-####################################
-##
-## A class for computing Cgg and Ckg
-## neatly
-##
-####################################
-
 class limb():
    """
    A class for computing Cgg and Ckg.
@@ -32,11 +25,11 @@ class limb():
    XXXXX
    """
    
-   def __init__(self, dNdz_fname, thy_fid, Pgm, Pgg, Pmm, background, lmax=1000, Nlval=64, zmin=0.001, zmax=2., Nz=50):
+   def __init__(self, dNdz, thy_fid, Pgm, Pgg, Pmm, background, lmax=1000, Nlval=64, zmin=0.001, zmax=2., Nz=50):
       """
       Parameters
       ----------
-      dNdz_fname: str
+      dNdz_fname: str OR ndarray
          redshift distribution filename. 
       zmin: float
          ...
@@ -45,7 +38,7 @@ class limb():
       Nz: int
          ...
       """
-      dNdz       = np.loadtxt(dNdz_fname)
+      if isinstance(dNdz,str): dNdz = np.loadtxt(dNdz)
       self.Ng    = dNdz.shape[1] - 1
       self.zmin  = zmin
       self.zmax  = zmax
