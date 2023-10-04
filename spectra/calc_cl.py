@@ -102,7 +102,8 @@ def cij_poly_approx(data):
     return result
     
     
-def full_master(ledges,maps,msks,names,fnout,do_cov=False,cij=None,only_auto=False,overwrite=False):
+def full_master(ledges, maps, msks, names, fnout, do_cov=False, cij=None,
+                only_auto=False, pairs=None, overwrite=False):
     """
     Computes power spectra and covariances and saves them in a .json format.
     It is assumed that all maps and masks have the same nside.
@@ -125,14 +126,15 @@ def full_master(ledges,maps,msks,names,fnout,do_cov=False,cij=None,only_auto=Fal
     overwrite: if False (default), doesn't recompute prexisting pseudo-Cells and 
                covariances of the existing .json file
     """
-    # enumerate list of unique pairs (upper triangle)
+    # enumerate list of pairs
     nmaps = len(maps)
-    pairs = []
+    pairs_ = []
     for i in range(nmaps):
         for j in range(i,nmaps):
-            pairs.append([i,j])
-    if only_auto: pairs = [[i,i] for i in range(nmaps)]
-    nspec = len(pairs) 
+            pairs_.append([i,j])
+    if only_auto: pairs_ = [[i,i] for i in range(nmaps)]
+    if pairs is not None: pairs_ = pairs
+    pairs = pairs_ ; nspec = len(pairs) 
     # and a shortcut to save json file
     def write_outdata(outdata):
         with open(fnout, "w") as outfile:
@@ -152,9 +154,10 @@ def full_master(ledges,maps,msks,names,fnout,do_cov=False,cij=None,only_auto=Fal
             # However, nside and ledges cannot be updated without
             # overwriting the entire file.
             outdata['map names'] = names
+            outdata['pixwin']    = pixwin.tolist()
     else:
         outdata = {'README':readme,'nside':nside,'map names':names,
-                   'ledges':ledges,'ell':ell.tolist(),'pixwin':pixwin}
+                   'ledges':ledges,'ell':ell.tolist(),'pixwin':pixwin.tolist()}
     write_outdata(outdata)
     
     # define fields and workspaces
@@ -174,14 +177,15 @@ def full_master(ledges,maps,msks,names,fnout,do_cov=False,cij=None,only_auto=Fal
             outdata[wl_fname] = wl.tolist()
             outdata[cl_fname] = cl.tolist()
             write_outdata(outdata)   
-
-    # start working on the covariance (if applicable)
-    if not do_cov: return 'all done'
+            
+    # approximate "theory spectra" (for the covariance) as a polynomial fit to the 
+    # measured cl's if not provided
     if cij is None: cij = cij_poly_approx(outdata)
     outdata['cij'] = cij.tolist()
     write_outdata(outdata)
-    
-    # compute gaussian covariances
+            
+    # start working on the covariance (if applicable)
+    if not do_cov: return 'all done'
     for a in range(nspec):
         for b in range(a,nspec):
             i,j = pairs[a]
