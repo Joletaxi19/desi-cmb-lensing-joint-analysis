@@ -13,7 +13,7 @@ from likelihoods.pack_data       import pack_cl_wl,pack_cov,pack_dndz
 class XcorrLike(Likelihood):
     ## From yaml file
     # .json file input (cl's, window functions and covariances)
-    jsonfn:   list
+    jsonfn:   str
     # name of the CMB lensing map 
     kapName:  str
     # names of the galaxy samples
@@ -98,27 +98,36 @@ class XcorrLike(Likelihood):
         self.dndz = pack_dndz(dndzs)
         self.pixwin = np.array(jsondata['pixwin'])
 
-    def compute_full(self):
-        """
-        Do the full prediction (including [pixel] window functions)
-        Returns a table with coefficients
-        # (1, alpha_a(z1), SN(z1), alpha_x(z1), alpha_a(z2), SN(z2), alpha_x(z2), ...)
-        """
-        pp  = self.provider
+    def get_cosmo_parameters(self):
+        pp      = self.provider
         omb = pp.get_param('omega_b')
         omc = pp.get_param('omega_cdm')
         ns  = pp.get_param('n_s')
         As  = pp.get_param('ln1e10As')
         H0  = pp.get_param('H0')
         Mnu = pp.get_param('m_ncdm')
+        return omb,omc,ns,As,H0,Mnu
 
+    def get_nuisance_parameters(self,i):
+        pp   = self.provider
+        suf  = self.galNames[i]
+        b1   = pp.get_param('b1_'+suf)
+        b2   = pp.get_param('b2_'+suf)
+        bs   = pp.get_param('bs_'+suf)
+        smag = pp.get_param('smag_'+suf)
+        return b1,b2,bs,smag
+
+    def compute_full(self):
+        """
+        Do the full prediction (including [pixel] window functions)
+        Returns a table with coefficients
+        # (1, alpha_a(z1), SN(z1), alpha_x(z1), alpha_a(z2), SN(z2), alpha_x(z2), ...)
+        """
+        omb,omc,ns,As,H0,Mnu = self.get_cosmo_parameters()
         full_pred = []
         Nls       = []
         for i,suf in enumerate(self.galNames):
-            b1   = pp.get_param('b1_'+suf)
-            b2   = pp.get_param('b2_'+suf)
-            bs   = pp.get_param('bs_'+suf)
-            smag = pp.get_param('smag_'+suf)
+            b1,b2,bs,smag = self.get_nuisance_parameters(i)
             params = np.array([omb,omc,ns,As,H0,Mnu,b1,b2,bs])
             # Cgg and Ckg are tables of shape (nell,4)
             # where the four columns correspond to 
@@ -148,20 +157,10 @@ class XcorrLike(Likelihood):
     def best_fit_raw(self, i, pixwin=True):
         """
         Returns raw theory prediction with linear
-        parameters fit to their best-fit values.
+        parameters fixed to their best-fit values.
         """
-        pp      = self.provider
-        suf     = self.galNames[i]
-        omb     = pp.get_param('omega_b')
-        omc     = pp.get_param('omega_cdm')
-        ns      = pp.get_param('n_s')
-        As      = pp.get_param('ln1e10As')
-        H0      = pp.get_param('H0')
-        Mnu     = pp.get_param('m_ncdm')
-        b1      = pp.get_param('b1_'+suf)
-        b2      = pp.get_param('b2_'+suf)
-        bs      = pp.get_param('bs_'+suf)
-        smag    = pp.get_param('smag_'+suf)
+        omb,omc,ns,As,H0,Mnu = self.get_cosmo_parameters()
+        b1,b2,bs,smag = self.get_nuisance_parameters(i)
         params  = np.array([omb,omc,ns,As,H0,Mnu,b1,b2,bs])
         Cgg,Ckg = self.clPred.computeCggCkg(i,params,smag)
         pixwin_idxs = [0,1,3]
