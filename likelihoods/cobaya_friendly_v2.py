@@ -1,3 +1,4 @@
+# !! EVENTUALLY WANT TO HANDLE MORE THAN ONE CMB LENSING MAP !!
 import numpy as np
 import sys
 import json
@@ -14,7 +15,6 @@ class XcorrLike(Likelihood):
     # .json file input (cl's, window functions and covariances)
     jsonfn:   list
     # name of the CMB lensing map 
-    # !! EVENTUALLY WANT TO HAVE MORE THAN ONE CMB LENSING MAP !!
     kapName:  str
     # names of the galaxy samples
     galNames: list
@@ -67,8 +67,8 @@ class XcorrLike(Likelihood):
             return [[a0,a0p],[SN,SNp],[aX,aXp]]
         tmp_priors = template_priors(0)
         for i in range(1,self.nsamp): tmp_priors += template_priors(i)
-        print('Using tmp_priors =',tmp_priors)
-        self.glk   = gaussLike(self.data, self.cov, tmp_priors=np.array(tmp_priors))
+        print('Using template priors =',tmp_priors)
+        self.glk = gaussLike(self.data, self.cov, tmp_priors=np.array(tmp_priors))
         
     def get_requirements(self):
         """What we require."""
@@ -89,17 +89,14 @@ class XcorrLike(Likelihood):
         Load the data from json file, stack and apply scale cuts.
         Also load window functions and make dndz matrix.
         """
-        kap       = self.kapName
-        self.wla  = []
-        self.wlx  = []
-        self.data = np.array([])
+        # load the json file containing cl's, window functions, and covariances
         with open(self.jsonfn) as outfile:
-            data = json.load(outfile)
-        dndzs = [np.loadtxt(self.dndzfns[i]) for i in range(self.nsamp)]
-        self.wla,self.wlx,self.data = pack_cl_wl(data,kapName,galNames,self.amin,self.amax,self.xmin,self.xmax)
-        self.cov  =                   pack_cov(  data,kapName,galNames,self.amin,self.amax,self.xmin,self.xmax)
-        self.dndz =                   pack_dndz(dndzs)
-        self.pixwin = np.array(data['pixwin'])
+            jsondata = json.load(outfile)
+        self.wla,self.wlx,self.data = pack_cl_wl(jsondata,self.kapName,self.galNames,self.amin,self.amax,self.xmin,self.xmax)
+        self.cov  =                   pack_cov(  jsondata,self.kapName,self.galNames,self.amin,self.amax,self.xmin,self.xmax)
+        dndzs     = [np.loadtxt(self.dndzfns[i]) for i in range(self.nsamp)]
+        self.dndz = pack_dndz(dndzs)
+        self.pixwin = np.array(jsondata['pixwin'])
 
     def compute_full(self):
         """
@@ -148,6 +145,34 @@ class XcorrLike(Likelihood):
             full_pred.append(res)
         return np.concatenate(full_pred)
     
+    def best_fit_raw(self, i, pixwin=True):
+        """
+        Returns raw theory prediction with linear
+        parameters fit to their best-fit values.
+        """
+        pp      = self.provider
+        suf     = self.galNames[i]
+        omb     = pp.get_param('omega_b')
+        omc     = pp.get_param('omega_cdm')
+        ns      = pp.get_param('n_s')
+        As      = pp.get_param('ln1e10As')
+        H0      = pp.get_param('H0')
+        Mnu     = pp.get_param('m_ncdm')
+        b1      = pp.get_param('b1_'+suf)
+        b2      = pp.get_param('b2_'+suf)
+        bs      = pp.get_param('bs_'+suf)
+        smag    = pp.get_param('smag_'+suf)
+        params  = np.array([omb,omc,ns,As,H0,Mnu,b1,b2,bs])
+        Cgg,Ckg = self.clPred.computeCggCkg(i,params,smag)
+        pixwin_idxs = [0,1,3]
+        for idx in pixwin_idxs:
+            if pixwin:
+                Ckg[:,idx] = Ckg[:,idx]*self.pixwin[:Nkg]
+                Cgg[:,idx] = Cgg[:,idx]*self.pixwin[:Ngg]**2
+        tmp_prm_star = self.glk.getBestFitTemp(self.compute_full())
+        monomials    = np.array([1.]+list(tmp_prm_star))
+        return np.dot(Cgg,monomials),np.dot(Ckg,monomials)
+
     def best_fit(self):
         """
         Returns theory prediction with all linear 

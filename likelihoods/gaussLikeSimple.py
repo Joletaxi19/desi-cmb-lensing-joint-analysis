@@ -203,6 +203,14 @@ class gaussLike():
       tmp_prm_star = -1*np.dot(M,V)
       return self.rawLogLike(thy,tmp_prm=tmp_prm_star)
 
+   def getBestFitTemp(self, thy):
+      """
+      Computes the best-fit values
+      of the template parameters.
+      """
+      delt,M,V = self.anaHelp(thy)
+      tmp_prm_star = -1*np.dot(M,V)
+      return tmp_prm_star
 
    def getBestFit(self, thy):
       """
@@ -210,7 +218,6 @@ class gaussLike():
       of the linear parameters are fixed
       to their best-fit values.
       """
-      delt,M,V = self.anaHelp(thy)
-      tmp_prm_star = -1*np.dot(M,V)
+      tmp_prm_star = self.getBestFitTemp(thy)
       monomials = np.array([1.]+list(tmp_prm_star))
       return np.dot(thy,monomials)
