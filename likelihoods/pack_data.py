@@ -50,9 +50,9 @@ def get_cov(data,name1,name2,name3,name4):
     for i in range(2):
         for j in range(2):
             res = tryit(perms12[i],perms34[j])
-            if not (res == -1): return res
+            if not isinstance(res,int): return res
             res = tryit(perms34[i],perms12[j],transpose=True)
-            if not (res == -1): return res
+            if not isinstance(res,int): return res
     print(f'Error: cov_{perms12[0]}_{perms34[0]}, or any equivalent permutation')
     print( 'of the names, is not found in the data')
     sys.exit()
@@ -79,7 +79,7 @@ def pack_cl_wl(data, kapName, galNames, amin, amax, xmin, xmax):
         odata = np.concatenate((odata,cgg,ckg))
     return wla,wlx,odata
 
-def pack_cov(data, kapName, galNames, amin, amax, xmin, xmax):
+def pack_cov(data, kapName, galNames, amin, amax, xmin, xmax, verbose=False):
     """
     Package the covariance matrix. 
     """
@@ -103,7 +103,7 @@ def pack_cov(data, kapName, galNames, amin, amax, xmin, xmax):
     # scale cuts
     I = []
     for i in range(nsamp): I+=list(nell*2*i+acuts[i])+list(nell*(2*i+1)+xcuts[i])
-    print('Using these idexes for the covariance matrix',I)
+    if verbose: print('Using these idexes for the covariance matrix',I)
     return cov[:,I][I,:]
 
 def pack_dndz(dndzs,zmin=0.05,nz=500):
@@ -119,16 +119,3 @@ def pack_dndz(dndzs,zmin=0.05,nz=500):
     dndz[:,0] = zeval
     for i in range(n): dndz[:,i+1] = interp1d(dndzs[i][:,0],dndzs[i][:,1],bounds_error=False,fill_value=0.)(zeval)
     return dndz
-
-
-if __name__ == "__main__":
-    with open('../spectra/LRGxPR3.json') as outfile:
-        data = json.load(outfile)
-    kapName = 'PR3'
-    galNames = ['LRGz1','LRGz2','LRGz3','LRGz4']
-    amin = [125.]*4
-    amax = [600.]*4
-    xmin = [0.]*4
-    xmax = [600.]*4
-    wla,wlx,cldata = pack_cl_wl(data, kapName, galNames, amin, amax, xmin, xmax)
-    cov = pack_cov(data, kapName, galNames, amin, amax, xmin, xmax)
