@@ -1,6 +1,7 @@
 # Buzzard mocks
 
 Power spectra and window functions: `lrg_s1i_XXX.txt` where `XXX = cls, wla, wlx` and `i=1,2,3,4` for `z = z1,z2,z3,z4`.
+
 Redshift distribution: `combined_dNdz.txt`. First column is redshifts, remaining four are dNdz for `z = z1,z2,z3,z4`.
 
 ### Fiducial cosmology
