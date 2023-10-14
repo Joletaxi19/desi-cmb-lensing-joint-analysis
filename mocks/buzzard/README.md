@@ -4,6 +4,8 @@ Power spectra and window functions: `lrg_s1i_XXX.txt` where `XXX = cls, wla, wlx
 
 Redshift distribution: `combined_dNdz.txt`. First column is redshifts, remaining four are dNdz for `z = z1,z2,z3,z4`.
 
+Covariance for PR4: `lrg_pr4_multi_cov.txt`. Basis is (Cgg1, Ckg1, Cgg2, Ckg2, ... Ckg4) with 20 ell bins (same bins as `*cls.txt`).
+
 ### Fiducial cosmology
 ```
 # inputs
