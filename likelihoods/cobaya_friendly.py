@@ -24,20 +24,39 @@ class XcorrLike(Likelihood):
     xmax:   list
     # redshift distribuiton
     dndzfn: str
-    #
+    # fiducial shot noise
+    fidSN:    list
+    # prior on shot noise (sigma = fidSN*snfrac)
+    snfrac:   float
+    # fiducial alpha_auto and priors
+    fida0:    list
+    a0prior:  list
+    # fiducial alpha_cross and priors
+    fidaX:    list
+    aXprior:  list
+    # Chen prior
+    # when this is true alpha_x = alpha_0/(2*b^E_1) + epsilon
+    # and the fidaX, aXprior are the fiducial values and priors
+    # on epsilon (rather than alphaX)
+    chenprior: bool
+    # maximize or sample?
+    maximize:  bool
     def initialize(self):
         """Sets up the class."""
         self.loadData()
-        fid = np.array([0.022,0.1202,0.9667,3.045,67.27,0.06,0.9,0,0]) # omb,omc,ns,As,H0,Mnu,b1,b2,bs
+        fid_cosmo = [0.022,0.1202,0.9667,3.045,67.27,0.06] # omb,omc,ns,ln(1e10 As),H0,Mnu
+        fid_bias  = [0.9,0.,0.]                            # b1, b2, bs
+        fid = np.array(fid_cosmo+fid_bias)
         self.clPred = limb(self.dndzfn, fid, pgmHEFT, pggHEFT, pmmHEFT, classyBackground, zmin=0.001, zmax=1.8, Nz=80)
-        # likelihood
-        snfrac     = 0.3
-        tmp_priors = [[0,50],[4.02e-6,snfrac*4.02e-6],[0,50]]
-        tmp_priors+= [[0,50],[2.24e-6,snfrac*2.24e-6],[0,50]]
-        tmp_priors+= [[0,50],[2.07e-6,snfrac*2.07e-6],[0,50]]
-        tmp_priors+= [[0,50],[2.26e-6,snfrac*2.26e-6],[0,50]]
-        tmp_priors = np.array(tmp_priors)
-        self.glk   = gaussLike(self.data, self.cov, tmp_priors=tmp_priors)
+        def template_priors(isamp):
+            a0 = self.fida0[isamp] ; a0p = self.a0prior[isamp]
+            SN = self.fidSN[isamp] ; SNp = self.snfrac*SN
+            aX = self.fidaX[isamp] ; aXp = self.aXprior[isamp]
+            return [[a0,a0p],[SN,SNp],[aX,aXp]]
+        tmp_priors = template_priors(0)
+        for i in range(1,len(self.suffx)): tmp_priors += template_priors(i)
+        print('Using template priors =',tmp_priors)
+        self.glk = gaussLike(self.data, self.cov, tmp_priors=np.array(tmp_priors))
         
     def get_requirements(self):
         """What we require."""
@@ -50,6 +69,7 @@ class XcorrLike(Likelihood):
         
     def logp(self,**params_values):
         """Return the log-likelihood."""
+        if self.maximize: return self.glk.maxLogLike(self.compute_full())
         return self.glk.margLogLike(self.compute_full())
         
     def loadData(self):
@@ -106,6 +126,9 @@ class XcorrLike(Likelihood):
             smag = pp.get_param('smag_'+suf)
             params = np.array([omb,omc,ns,As,H0,Mnu,b1,b2,bs])
             Cgg,Ckg = self.clPred.computeCggCkg(i,params,smag)
+            if self.chenprior:
+                Cgg[:,1] += Cgg[:,3]/(2.*(1.+b1))
+                Ckg[:,1] += Ckg[:,3]/(2.*(1.+b1))
             Nkg = Ckg.shape[0] ; Ngg = Cgg.shape[0]
             wx = self.wlx[i][:,:Nkg]  ; wa = self.wla[i][:,:Ngg]
             Cggkg = np.concatenate((np.dot(wa,Cgg),np.dot(wx,Ckg)))

@@ -99,7 +99,7 @@ class XcorrLike(Likelihood):
         self.pixwin = np.array(jsondata['pixwin'])
 
     def get_cosmo_parameters(self):
-        pp      = self.provider
+        pp  = self.provider
         omb = pp.get_param('omega_b')
         omc = pp.get_param('omega_cdm')
         ns  = pp.get_param('n_s')
@@ -154,7 +154,7 @@ class XcorrLike(Likelihood):
             full_pred.append(res)
         return np.concatenate(full_pred)
     
-    def best_fit_raw(self, i, pixwin=True):
+    def best_fit_raw(self, i, pixwin=True, return_tables=False):
         """
         Returns raw theory prediction with linear
         parameters fixed to their best-fit values.
@@ -171,6 +171,7 @@ class XcorrLike(Likelihood):
                 Cgg[:,idx] = Cgg[:,idx]*self.pixwin[:Ngg]**2
         tmp_prm_star = self.glk.getBestFitTemp(self.compute_full())
         monomials    = np.array([1.]+list(tmp_prm_star))
+        if return_tables: return tmp_prm_star,Cgg,Ckg
         return np.dot(Cgg,monomials),np.dot(Ckg,monomials)
 
     def best_fit(self):
