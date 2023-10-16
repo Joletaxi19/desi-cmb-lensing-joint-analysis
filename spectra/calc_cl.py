@@ -177,9 +177,9 @@ def full_master(ledges, maps, msks, names, fnout, do_cov=False, cij=None,
             outdata[wl_fname] = wl.tolist()
             outdata[cl_fname] = cl.tolist()
             write_outdata(outdata)   
-            
-    # approximate "theory spectra" (for the covariance) as a polynomial fit to the 
-    # measured cl's if not provided
+    
+    # If "theory spectra" (for the covariance) are not provided, approximate
+    # with a polynomial fit to the measured cl's
     if cij is None: cij = cij_poly_approx(outdata)
     outdata['cij'] = cij.tolist()
     write_outdata(outdata)

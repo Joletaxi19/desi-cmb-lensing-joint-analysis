@@ -12,11 +12,7 @@ N=np.abs(np.fromfile(f,count=3,dtype=np.int32)[0]) # added abs (not sure why neg
 
 print(N,'total halos')
 
-# only take first five entries for testing (there are ~8e8 halos total...)
-# comment the following line to read in all halos
-#N = 5, commented this out so that we load the whole catalog!
-
-print('Began loading catalog')
+print('Started loading catalog')
 catalog=np.fromfile(f,count=N*10,dtype=np.float32)
 catalog=np.reshape(catalog,(N,10))
 print('Finished loading catalog!')
@@ -33,7 +29,6 @@ redshift = zofchi(chi)
 
 theta, phi  = hp.vec2ang(np.column_stack((x,y,z))) # in radians
 
-#####################################################################################
 def make_subcatalog(z1,z2,s):
     I_lrg = np.where((redshift>z1) & (redshift<z2))
     N_lrg = len(I_lrg[0])
@@ -46,19 +41,7 @@ def make_subcatalog(z1,z2,s):
     LRG_catalog = LRG_catalog.flatten()
     LRG_catalog.astype('float32').tofile('LRG_halos_'+'s'+str(s)+'.pksc')
 
-make_subcatalog(0.27,0.65,1)
-make_subcatalog(0.39,0.81,2)
-make_subcatalog(0.59,1.03,3)
-make_subcatalog(0.67,1.20,4)
-
-#####################################################################################
-
-### e.g. project to a map, matching the websky orientations
-#nside = 1024
-#map   = np.zeros((hp.nside2npix(nside)))
-
-#pix = hp.vec2pix(nside, x, y, z)
-#pix = hp.ang2pix(nside, theta, phi) does the same
-
-#weight = 1. #1 for number density, array of size(x) for arbitrary
-#np.add.at(map, pix, weight)
+make_subcatalog(0.25,0.75,1)
+make_subcatalog(0.30,0.90,2)
+make_subcatalog(0.50,1.10,3)
+make_subcatalog(0.60,1.40,4)

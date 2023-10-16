@@ -136,6 +136,11 @@ if __name__ == "__main__":
         lrg_name = f'LRG_decals_z{isamp}'    
         make_mc_cls(lrg_name,lrg_mask*decals,kap_mask,'c',lensmap=lensmap)
         print('Done with MC sims for LRG DECaLS x PR3',flush=True)
+    # LRG DES footprint x PR3
+    if True:
+        lrg_name = f'LRG_des_z{isamp}'    
+        make_mc_cls(lrg_name,lrg_mask*des_mask,kap_mask,'c',lensmap=lensmap)
+        print('Done with MC sims for LRG DES x PR3',flush=True)
 
     lensmap  = 'PR4'
     kap_mask = hp.read_map(f'../maps/masks/{lensmap}_lens_mask.fits',dtype=None)

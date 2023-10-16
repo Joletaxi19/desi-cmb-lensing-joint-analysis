@@ -17,9 +17,10 @@ kap_map   = [hp.read_map(f'../maps/PR{ver}_lens_kap_filt.hpx2048.fits')]
 kap_mask  = [hp.read_map(f'../maps/masks/PR{ver}_lens_mask.fits')]
 nkk       = np.loadtxt(f'../data/PR{ver}_lens_nlkk_filt.txt')
 fnout     = f'LRGxPR{ver}.json'
+fncor     = f'LRGxPR{ver}_mccorr.json'
 
 # define ell-bins, and give our maps+maps some names
-ledges   = [25+50*i for i in range(21)]
+ledges   = [25+50*i for i in range(120)]
 kapName  = f'PR{ver}'
 galNames = ['LRGz1','LRGz2','LRGz3','LRGz4']
 msks     = kap_mask + lrg_masks
@@ -29,7 +30,7 @@ full_master(ledges,maps,msks,kapName+galNames,fnout)
 # correct for the lensing normalization using
 # the MC calculations (labeled by prefix), overwrite old json file
 prefixs = [f'LRG_full_z1_PR{ver}']*4
-apply_mc_corr(fnout,fnout,kapName,galNames,prefixs)
+apply_mc_corr(fnout,fncor,kapName,galNames,prefixs)
 # Use polynomial fits to measured Ckg, Cgg for 
 # the covariance. Update the ckk theory curve.
 with open(fnout) as outfile:
@@ -40,4 +41,4 @@ cij[0,0,:] = np.interp(ells,nkk[:,0],nkk[:,2],right=0)
 # now compute the covariance (only for the pairs of interest
 # which correspond to ckgi, cgigi for i = 1,2,3,4)
 pairs = [[0,1],[0,2],[0,3],[0,4],[1,1],[2,2],[3,3],[4,4]]
-full_master(ledges,maps,msks,names,fnout,cij=cij,do_cov=True,pairs=pairs)
+full_master(ledges,maps,msks,names,fncor,cij=cij,do_cov=True,pairs=pairs)
