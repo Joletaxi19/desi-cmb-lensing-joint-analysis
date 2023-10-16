@@ -270,3 +270,53 @@ class limb():
          Ckg[:,j+1+Nmono_auto] = Spline(self.lval,integral)(self.l)
           
       return Cgg,Ckg
+
+
+   def computeCgigjZevolution(self, i, j, thy_args, mono_auto, mono_cross, smag, ext=3):
+      """
+      i: i'th sample
+      j: j'th sample
+      thy_args, mono_auto and mono_corss, and smag are all functions of z
+      
+      does not add shot noise by default
+      """
+      # Evaluate projection kernels and power spectra.
+      # The "kgrid" is defined such that kgrid[i,j] = (l[j]+0.5)/chi(z[i])
+      thy_args_ = thy_args(self.zeff[i])
+      OmM,chistar,Ez,chi = self.background(thy_args_,self.z)
+      Wk,Wg_clust,Wg_mag = self.projectionKernels(thy_args_,bkgrnd=[OmM,chistar,Ez,chi])
+      PmmT  = self.Pmm(thy_args_,self.z)              
+      kgrid = (np.tile(self.lval+0.5,self.Nz)/np.repeat(chi,self.Nlval)).reshape((self.Nz,self.Nlval))
+      
+      PgmT = np.zeros_like(PmmT); PgmT[:,0] = PmmT[:,0].copy()
+      PggT = np.zeros_like(PmmT); PggT[:,0] = PmmT[:,0].copy()
+      for k,z in enumerate(self.z):
+         monx        = np.array([1.]+list(mono_cross(z)))
+         mona        = np.array([1.]+list(mono_auto(z)))
+         PgmT[:,k+1] = np.dot(self.Pgm(thy_args(z),z)[:,1:],monx)
+         PggT[:,k+1] = np.dot(self.Pgg(thy_args(z),z)[:,1:],mona)   
+          
+      Wgi_clust   = Wg_clust[:,i]    # (Nz) ndarray
+      Wgi_mag     = Wg_mag[:,i]      # (Nz) ndarray
+      Wgj_clust   = Wg_clust[:,j]    # (Nz) ndarray
+      Wgj_mag     = Wg_mag[:,j]      # (Nz) ndarray
+              
+      PgmGrid = np.zeros_like(kgrid)   
+      PggGrid = np.zeros_like(kgrid) 
+      PmmGrid = np.zeros_like(kgrid) 
+      for k in range(self.Nz): 
+         PgmGrid[k,:] = Spline(PgmT[:,0],PgmT[:,k+1],ext=1)(kgrid[k,:])   
+         PggGrid[k,:] = Spline(PggT[:,0],PggT[:,k+1],ext=1)(kgrid[k,:])   
+         PmmGrid[k,:] = Spline(PmmT[:,0],PmmT[:,k+1],ext=1)(kgrid[k,:])
+          
+      def reshape_kernel(kernel): return np.repeat(kernel/chi**2.,self.Nlval).reshape(kgrid.shape)    
+          
+      ##### Cgigj
+      integrand  = reshape_kernel(Wgi_clust*Wgj_clust)                   * PggGrid
+      integrand += reshape_kernel((5*smag(zelf.z)-2)*Wgi_mag*Wgj_clust)  * PgmGrid
+      integrand += reshape_kernel((5*smag(zelf.z)-2)*Wgj_mag*Wgi_clust)  * PgmGrid
+      integrand += reshape_kernel((5*smag(zelf.z)-2)**2*Wgi_mag*Wgj_mag) * PmmGrid
+      integral   = simps(integrand,x=chi,axis=0)
+      Cgigj      = Spline(self.lval,integral)(self.l)
+          
+      return Cgigj
