@@ -41,7 +41,7 @@ if lowpass:
     pl_nkk[:,1] *= np.interp(pl_nkk[:,0],lval,filt**2)
     pl_nkk[:,2] *= np.interp(pl_nkk[:,0],lval,filt**2)
     # and write the modified noise file.
-    with open("../data/P18_lens_nlkk_filt.txt","w") as fout:
+    with open("../data/PR3_lens_nlkk_filt.txt","w") as fout:
         fout.write("# Planck lensing noise curves.\n")
         fout.write("# These curves have been low-pass filtered.\n")
         fout.write("# {:>6s} {:>15s} {:>15s}\n".\
@@ -63,13 +63,12 @@ if apodize: # Apodsize the mask.
     pl_mask = nmt.mask_apodization(pl_mask,apos,apotype="C2")
 # Now write the processed maps at different Nside.
 
-pl_kappa = hp.alm2map(pl_klm,Nside)
 if lowpass:
-    outfn= 'P18_lens_kap_filt.hpx{:04d}.fits'.format(Nside)
+    outfn= 'PR3_lens_kap_filt.hpx{:04d}.fits'.format(Nside)
 else:
-    outfn= 'P18_lens_kap.hpx{:04d}.fits'.format(Nside)
-hp.write_map(outfn,pl_kappa,dtype='f4',coord='G',overwrite=True)
-outfn    = 'masks/P18_lens_msk.hpx{:04d}.fits'.format(Nside)
+    outfn= 'PR3_lens_kap.hpx{:04d}.fits'.format(Nside)
+hp.write_map(outfn,pl_kappa,dtype='f4',coord='C',overwrite=True)
+outfn    = 'masks/PR3_lens_mask.fits'
 hp.write_map(outfn,hp.ud_grade(pl_mask,Nside),dtype='f4',\
-             coord='G',overwrite=True)
+             coord='C',overwrite=True)
 #
