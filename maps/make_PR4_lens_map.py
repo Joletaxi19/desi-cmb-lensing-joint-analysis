@@ -7,14 +7,32 @@
 import numpy    as np
 import healpy   as hp
 import pymaster as nmt
+import os
+import urllib.request
 #
 lowpass = True
 apodize = True
 Nside   = 2048
 # Read the data, mask and noise properties.
-pl_klm  = np.nan_to_num(hp.read_alm('/global/cfs/cdirs/cmb/data/planck2020/PR4_lensing/PR4_klm_dat_p.fits'))
-pl_mask = hp.ud_grade(hp.read_map('/global/cfs/cdirs/cmb/data/planck2020/PR4_lensing/mask.fits.gz',dtype=None),Nside)
-pl_nkk  = np.loadtxt( '../data/PR4_lens_nlkk.txt')
+bdir    = '/global/cfs/cdirs/cmb/data/planck2020/PR4_lensing/'
+pl_klm  = np.nan_to_num(hp.read_alm(bdir+'PR4_klm_dat_p.fits'))
+pl_mask = hp.ud_grade(hp.read_map(bdir+'mask.fits.gz',dtype=None),Nside)
+nkk     = np.nan_to_num(np.loadtxt(bdir+'PR4_nlkk_p.dat'))
+# download data 
+# Read the data, mask and noise properties.
+# download PR3 data to get fiducial ckk
+website = 'http://pla.esac.esa.int/pla/aio/product-action?COSMOLOGY.FILE_ID='
+fname   = 'COM_Lensing_4096_R3.00' #COM_Lensing-Szdeproj_4096_R3.00
+urllib.request.urlretrieve(website+fname+'.tgz', fname+'.tgz')
+os.system(f"tar -xvzf {fname}.tgz")  
+os.remove(fname+'.tgz')
+pr3_nkk  = np.loadtxt(f'{fname}/MV/nlkk.dat')
+os.system(f"rm -r {fname}")
+# 
+pl_nkk      = np.zeros((len(nkk),3))
+pl_nkk[:,0] = np.arange(len(nkk))
+pl_nkk[:,1] = nkk
+pl_nkk[:,2] = (pr3_nkk[:,2]-pr3_nkk[:,1])[:len(nkk)] + nkk
 #
 if lowpass:
     # Filter the alm to remove high ell power.
@@ -57,6 +75,6 @@ if lowpass:
 else:
     outfn= 'PR4_lens_kap.hpx{:04d}.fits'.format(Nside)
 hp.write_map(outfn,pl_kappa,dtype='f4',coord='C',overwrite=True)
-outfn    = 'masks/PR4_lens_msk.hpx{:04d}.fits'.format(Nside)
+outfn    = 'masks/PR4_lens_mask.fits'
 hp.write_map(outfn,hp.ud_grade(pl_mask,Nside),dtype='f4',\
              coord='C',overwrite=True)

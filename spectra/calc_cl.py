@@ -103,7 +103,7 @@ def cij_poly_approx(data):
     
     
 def full_master(ledges, maps, msks, names, fnout, do_cov=False, cij=None,
-                only_auto=False, pairs=None, overwrite=False):
+                only_auto=False, pairs=None, overwrite=False, overwrite_cov=False):
     """
     Computes power spectra and covariances and saves them in a .json format.
     It is assumed that all maps and masks have the same nside.
@@ -191,7 +191,7 @@ def full_master(ledges, maps, msks, names, fnout, do_cov=False, cij=None,
             i,j = pairs[a]
             k,l = pairs[b]
             cov_fname = f'cov_{names[i]}_{names[j]}_{names[k]}_{names[l]}'
-            if (cov_fname in outdata) and (not overwrite):
+            if (cov_fname in outdata) and (not overwrite_cov):
                 continue
             else:
                 cw = nmt.NmtCovarianceWorkspace()
