@@ -62,7 +62,7 @@ def make_mc_cls(gal_name,gal_msk,kap_msk,COORD_IN,NSIDE_OUT=2048,lensmap='PR3'):
 def bin_mc_corr(prefix,ledges=[25.+50*i for i in range(21)]):
     # now average
     nbin = len(ledges)-1
-    fnames = list(glob(f'sims/{prefix}_*'))
+    fnames = list(glob(f'{prefix}_*'))
     centers = [(ledges[i]+ledges[i+1])/2 for i in range(nbin)]
     data_gkt = []
     data_gkr = []
@@ -73,12 +73,13 @@ def bin_mc_corr(prefix,ledges=[25.+50*i for i in range(21)]):
         data_gkr.append(C_gkr)
     Ckgt = np.mean(data_gkt,axis=0)
     Ckgr = np.mean(data_gkr,axis=0)
-    Ckgt_bin = np.zeros(nbin)
-    Ckgr_bin = np.zeros(nbin)
+    Ckgt_bin = np.ones(nbin)
+    Ckgr_bin = np.ones(nbin)
     for i in range(nbin):
         I = np.where((ell>=ledges[i]) & (ell<ledges[i+1]))
-        Ckgt_bin[i] = np.mean(Ckgt[I])
-        Ckgr_bin[i] = np.mean(Ckgr[I])
+        if len(I[0])>0:
+            Ckgt_bin[i] = np.mean(Ckgt[I])
+            Ckgr_bin[i] = np.mean(Ckgr[I])
     dat = np.array([centers,Ckgt_bin/Ckgr_bin]).T
     return dat
 

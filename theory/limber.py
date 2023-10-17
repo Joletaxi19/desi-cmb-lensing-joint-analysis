@@ -313,9 +313,9 @@ class limb():
           
       ##### Cgigj
       integrand  = reshape_kernel(Wgi_clust*Wgj_clust)                   * PggGrid
-      integrand += reshape_kernel((5*smag(zelf.z)-2)*Wgi_mag*Wgj_clust)  * PgmGrid
-      integrand += reshape_kernel((5*smag(zelf.z)-2)*Wgj_mag*Wgi_clust)  * PgmGrid
-      integrand += reshape_kernel((5*smag(zelf.z)-2)**2*Wgi_mag*Wgj_mag) * PmmGrid
+      integrand += reshape_kernel((5*smag(self.z)-2)*Wgi_mag*Wgj_clust)  * PgmGrid
+      integrand += reshape_kernel((5*smag(self.z)-2)*Wgj_mag*Wgi_clust)  * PgmGrid
+      integrand += reshape_kernel((5*smag(self.z)-2)**2*Wgi_mag*Wgj_mag) * PmmGrid
       integral   = simps(integrand,x=chi,axis=0)
       Cgigj      = Spline(self.lval,integral)(self.l)
           

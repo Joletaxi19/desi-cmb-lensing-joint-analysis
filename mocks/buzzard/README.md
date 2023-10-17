@@ -16,7 +16,7 @@ omega_b   = 0.02254
 omega_cdm = 0.1176
 
 # derived
-sigma8         = 0.82530
+sigma8         = 0.82
 100*theta_star = 1.0476264
 ```
 

@@ -102,13 +102,8 @@ class XcorrLike(Likelihood):
         for i in range(Nsamp):
             self.wla.append(np.loadtxt(self.wlafn[i])[Iacut[i],:])
             self.wlx.append(np.loadtxt(self.wlxfn[i])[Ixcut[i],:])
-
-    def compute_full(self):
-        """
-        Do the full prediction (including window function)
-        Returns a table with coefficients
-        # (1, alpha_a(z1), SN(z1), alpha_x(z1), alpha_a(z2), SN(z2), alpha_x(z2), ...)
-        """
+            
+    def get_cosmo_parameters(self):
         pp  = self.provider
         omb = pp.get_param('omega_b')
         omc = pp.get_param('omega_cdm')
@@ -116,14 +111,45 @@ class XcorrLike(Likelihood):
         As  = pp.get_param('ln1e10As')
         H0  = pp.get_param('H0')
         Mnu = pp.get_param('m_ncdm')
+        return omb,omc,ns,As,H0,Mnu
 
+    def get_nuisance_parameters(self,i):
+        pp   = self.provider
+        suf  = self.suffx[i]
+        b1   = pp.get_param('b1_'+suf)
+        b2   = pp.get_param('b2_'+suf)
+        bs   = pp.get_param('bs_'+suf)
+        smag = pp.get_param('smag_'+suf)
+        return b1,b2,bs,smag
+            
+    def best_fit_raw(self, i, return_tables=False):
+        """
+        Returns raw theory prediction with linear
+        parameters fixed to their best-fit values.
+        """
+        omb,omc,ns,As,H0,Mnu = self.get_cosmo_parameters()
+        b1,b2,bs,smag = self.get_nuisance_parameters(i)
+        params  = np.array([omb,omc,ns,As,H0,Mnu,b1,b2,bs])
+        Cgg,Ckg = self.clPred.computeCggCkg(i,params,smag)
+        Nkg = Ckg.shape[0] ; Ngg = Cgg.shape[0]
+        tmp_prm_star = self.glk.getBestFitTemp(self.compute_full())
+        Ntmp = Cgg.shape[1]-1
+        tmp_prm_star = tmp_prm_star[i*Ntmp:(i+1)*Ntmp]
+        monomials    = np.array([1.]+list(tmp_prm_star))
+        if return_tables: return tmp_prm_star,Cgg,Ckg
+        return np.dot(Cgg,monomials),np.dot(Ckg,monomials)
+
+    def compute_full(self):
+        """
+        Do the full prediction (including window function)
+        Returns a table with coefficients
+        # (1, alpha_a(z1), SN(z1), alpha_x(z1), alpha_a(z2), SN(z2), alpha_x(z2), ...)
+        """
+        omb,omc,ns,As,H0,Mnu = self.get_cosmo_parameters()
         full_pred = []
         Nls       = []
         for i,suf in enumerate(self.suffx):
-            b1   = pp.get_param('b1_'+suf)
-            b2   = pp.get_param('b2_'+suf)
-            bs   = pp.get_param('bs_'+suf)
-            smag = pp.get_param('smag_'+suf)
+            b1,b2,bs,smag = self.get_nuisance_parameters(i)
             params = np.array([omb,omc,ns,As,H0,Mnu,b1,b2,bs])
             Cgg,Ckg = self.clPred.computeCggCkg(i,params,smag)
             if self.chenprior:
