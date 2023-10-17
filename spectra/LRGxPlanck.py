@@ -33,9 +33,7 @@ prefixs = [f'LRG_full_z1_PR{ver}']*4
 apply_mc_corr(fnout,fncor,kapName,galNames,prefixs)
 # Use polynomial fits to measured Ckg, Cgg for 
 # the covariance. Update the ckk theory curve.
-with open(fnout) as outfile:
-    outdata = json.load(outfile) 
-cij  = np.array(outdata['cij'])
+cij = np.loadtxt(f'fiducial/cls_LRGxPR4_bestFit.txt').reshape((5,5,3*2048))
 ells = np.arange(cij.shape[-1])
 cij[0,0,:] = np.interp(ells,nkk[:,0],nkk[:,2],right=0)
 # now compute the covariance (only for the pairs of interest

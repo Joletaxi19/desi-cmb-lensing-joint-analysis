@@ -170,6 +170,8 @@ class XcorrLike(Likelihood):
                 Ckg[:,idx] = Ckg[:,idx]*self.pixwin[:Nkg]
                 Cgg[:,idx] = Cgg[:,idx]*self.pixwin[:Ngg]**2
         tmp_prm_star = self.glk.getBestFitTemp(self.compute_full())
+        Ntmp = Cgg.shape[1]-1
+        tmp_prm_star = tmp_prm_star[i*Ntmp:(i+1)*Ntmp]
         monomials    = np.array([1.]+list(tmp_prm_star))
         if return_tables: return tmp_prm_star,Cgg,Ckg
         return np.dot(Cgg,monomials),np.dot(Ckg,monomials)

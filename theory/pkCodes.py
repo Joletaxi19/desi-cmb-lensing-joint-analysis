@@ -34,11 +34,16 @@ def getCosmo(thy_args):
    thy_args: dict
       cosmological inputs to CLASS
    """
+
+   omb,omc,ns,ln10As,H0,Mnu = thy_args[:6]
+             
    params = {'output': 'mPk','P_k_max_h/Mpc': 20.,'non linear':'halofit','z_pk': '0.0,20',
-             'N_ur': 1.0196,'N_ncdm': 2,'m_ncdm': '0.01,0.05'}
+             'A_s': 1e-10*np.exp(ln10As),'n_s': ns,'h': H0/100., 
+             'N_ur': 2.0328,'N_ncdm': 1,'m_ncdm': Mnu,'tau_reio': 0.0568,
+             'omega_b': omb,'omega_cdm': omc}
+   
    cosmo = Class()
    cosmo.set(params)
-   cosmo.set(thy_args)
    cosmo.compute()
    return cosmo
 
