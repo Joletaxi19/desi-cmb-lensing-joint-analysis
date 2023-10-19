@@ -16,17 +16,19 @@ nproc = comm.Get_size()
 def measure_cls_anafast(Isim,gal_msk,kap_msk,lensmap,NSIDE_OUT=2048,lmax=2000):
     """
     """
-    kap_recon,kap_true = get_kappa_maps(Isim,NSIDE_OUT,lensmap)
+    kap_rec,kap_true = get_kappa_maps(Isim,NSIDE_OUT,lensmap)
     
-    g_proxy = kap_true  * gal_msk; g_proxy -= np.mean(g_proxy)
-    k_true  = kap_true  * kap_msk; k_true  -= np.mean(k_true)
-    k_recon = kap_recon * kap_msk; k_recon -= np.mean(k_recon)
+    g_proxy  = kap_true * gal_msk; g_proxy  -= np.mean(g_proxy)
+    k_true   = kap_true * kap_msk; k_true   -= np.mean(k_true)
+    k_recmsk = kap_rec  * kap_msk; k_recmsk -= np.mean(k_recmsk)
+    kap_rec -= np.mean(kap_rec)
     
-    C_gkt = hp.anafast(g_proxy,map2=k_true ,lmax=lmax,use_pixel_weights=True) 
-    C_gkr = hp.anafast(g_proxy,map2=k_recon,lmax=lmax,use_pixel_weights=True)
-    ell   = np.arange(len(C_gkt))
+    C_gkt        = hp.anafast(g_proxy,map2=k_true  ,lmax=lmax,use_pixel_weights=True) 
+    C_gkr        = hp.anafast(g_proxy,map2=k_recmsk,lmax=lmax,use_pixel_weights=True)
+    C_gkr_nomask = hp.anafast(g_proxy,map2=kap_rec ,lmax=lmax,use_pixel_weights=True)
     
-    dat   = np.array([ell,C_gkt,C_gkr]).T
+    ell = np.arange(len(C_gkt))
+    dat = np.array([ell,C_gkt,C_gkr,C_gkr_nomask]).T
     
     return dat
     
@@ -56,7 +58,7 @@ def make_mc_cls(gal_name,gal_msk,kap_msk,COORD_IN,NSIDE_OUT=2048,lensmap='PR3'):
             fname = f'sims/{gal_name}_{lensmap}_{i}.txt'
             if not exists(fname):
                 dat = measure_cls_anafast(i,gal_msk,kap_msk,lensmap,NSIDE_OUT=NSIDE_OUT)
-                np.savetxt(fname,dat,header='Columns are: ell, C_gkt, Cgkr')
+                np.savetxt(fname,dat,header='Columns are: ell, C_gkt, C_gkr, C_gkr_nomask')
 
 
 def bin_mc_corr(prefix,ledges=[25.+50*i for i in range(21)]):
@@ -118,27 +120,27 @@ if __name__ == "__main__":
         make_mc_cls(lrg_name,lrg_mask,kap_mask,'c',lensmap=lensmap)
         print('Done with MC sims for LRG full x PR3',flush=True)    
     # LRG North footprint x PR3
-    if True:
+    if False:
         lrg_name = f'LRG_north_z{isamp}'    
         make_mc_cls(lrg_name,lrg_mask*north,kap_mask,'c',lensmap=lensmap)
         print('Done with MC sims for LRG north x PR3',flush=True)
     # LRG DES plus footprint x PR3
-    if True:
+    if False:
         lrg_name = f'LRG_desp_z{isamp}'    
         make_mc_cls(lrg_name,lrg_mask*des_mask*(1-dec15),kap_mask,'c',lensmap=lensmap)
         print('Done with MC sims for LRG DES plus x PR3',flush=True)
     # LRG DES minus footprint x PR3
-    if True:
+    if False:
         lrg_name = f'LRG_desm_z{isamp}'    
         make_mc_cls(lrg_name,lrg_mask*des_mask*dec15,kap_mask,'c',lensmap=lensmap)
         print('Done with MC sims for LRG DES minus x PR3',flush=True)
     # LRG DECaLS footprint x PR3
-    if True:
+    if False:
         lrg_name = f'LRG_decals_z{isamp}'    
         make_mc_cls(lrg_name,lrg_mask*decals,kap_mask,'c',lensmap=lensmap)
         print('Done with MC sims for LRG DECaLS x PR3',flush=True)
     # LRG DES footprint x PR3
-    if True:
+    if False:
         lrg_name = f'LRG_des_z{isamp}'    
         make_mc_cls(lrg_name,lrg_mask*des_mask,kap_mask,'c',lensmap=lensmap)
         print('Done with MC sims for LRG DES x PR3',flush=True)
@@ -147,7 +149,7 @@ if __name__ == "__main__":
     kap_mask = hp.read_map(f'../maps/masks/{lensmap}_lens_mask.fits',dtype=None)
     
     # LRG full footprint x PR4
-    if True:
+    if False:
         lrg_name = f'LRG_full_z{isamp}'    
         make_mc_cls(lrg_name,lrg_mask,kap_mask,'c',lensmap=lensmap)
         print('Done with MC sims for LRG full x PR4',flush=True)  

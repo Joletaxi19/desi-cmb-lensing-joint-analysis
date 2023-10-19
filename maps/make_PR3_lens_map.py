@@ -12,7 +12,6 @@ import os
 import urllib.request
 #
 lowpass = True
-apodize = True
 Nside=2048
 # download data 
 # Read the data, mask and noise properties.
@@ -55,12 +54,9 @@ rot      = hp.rotator.Rotator(coord='gc')
 pl_kappa = rot.rotate_map_pixel(pl_kappa)
 pl_mask  = rot.rotate_map_pixel(pl_mask)
 #
-if apodize: # Apodsize the mask.
-    apos    = 0.5  # deg.
-    print("Apodizing the mask by {:.2f} deg.".format(apos))
-    #pl_mask = nmt.mask_apodization(pl_mask,apos,apotype="Smooth")
-    #pl_mask = nmt.mask_apodization(pl_mask,apos,apotype="C1")
-    pl_mask = nmt.mask_apodization(pl_mask,apos,apotype="C2")
+apos    = 0.5  # deg.
+print("Apodizing the mask by {:.2f} deg.".format(apos))
+pl_mask_apod = nmt.mask_apodization(pl_mask,apos,apotype="C2")
 # Now write the processed maps at different Nside.
 
 if lowpass:
@@ -69,6 +65,9 @@ else:
     outfn= 'PR3_lens_kap.hpx{:04d}.fits'.format(Nside)
 hp.write_map(outfn,pl_kappa,dtype='f4',coord='C',overwrite=True)
 outfn    = 'masks/PR3_lens_mask.fits'
+hp.write_map(outfn,hp.ud_grade(pl_mask_apod,Nside),dtype='f4',\
+             coord='C',overwrite=True)
+outfn    = 'masks/PR3_lens_mask_noapod.fits'
 hp.write_map(outfn,hp.ud_grade(pl_mask,Nside),dtype='f4',\
              coord='C',overwrite=True)
 #
