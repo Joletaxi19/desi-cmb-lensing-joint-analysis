@@ -66,7 +66,6 @@ class gaussLike():
       
       self.dat        = dat
       self.cinv       = np.linalg.inv(cov)
-      self.logdet     = np.sum(np.log(np.linalg.eigvalsh(2*np.pi*cov))) 
       self.tmp_priors = tmp_priors
       self.D          = len(dat)
       self.T          = 0
@@ -121,7 +120,7 @@ class gaussLike():
       
       delt  = full_thy - self.dat
       chi2  = np.dot(delt,np.dot(self.cinv,delt))
-      return -0.5*chi2 + np.log(self.templatePrior(tmp_prm))  - 0.5*self.logdet
+      return -0.5*chi2 + np.log(self.templatePrior(tmp_prm))
 
     
    def anaHelp(self, thy):
@@ -181,7 +180,7 @@ class gaussLike():
             print('Found negative eigenvalues')
             return np.nan
         logdetM = 0.5*np.sum(np.log(eigvals))
-      res = np.log(prefac) - 0.5*chi2 - 0.5*self.logdet + logdetM
+      res = np.log(prefac) - 0.5*chi2 + logdetM
 
       return res
    
