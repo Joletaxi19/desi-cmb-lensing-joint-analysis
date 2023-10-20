@@ -12,17 +12,21 @@ cij   = np.loadtxt('cls_LRGxPR4_bestFit.txt').reshape((5,5,nEll))
 # which correspond to the basis [kappa, LRGz1, LRGz2, LRGz3, LRGz4].
 #
 # Explicitly:
-#      cij[0,0,:] is the fiducial Ckk+Nkk (from Planck PR4 release)
-#      cij[i,i,:] is C^{g_i g_i} with z = zi (i=1,2,3,4)
+#      cij[0,0,:] is a fiducial Ckk calculated with CLASS (w/o recon noise)
+#      cij[i,i,:] is C^{g_i g_i} INCLUDING SHOT NOISE with z = zi (i=1,2,3,4) 
 #      cij[0,i,:] is C^{k   g_i} with z = zi (i=1,2,3,4)
 #
 # The remaining entries are the cross-correlations between the 
 # different galaxy samples. e.g. cij[1,2,:] is the cross-correlation
 # of the galaxies in the first redshift bin with those in the second
-# C^{g_1 g_2}.
+# C^{g_1 g_2}. The curves for C^{g_i g_i}, C^{k g_i} are HEFT best-fit 
+# predictions. The curves for the galaxy-cross spectra are a HEFT 
+# prediction made by linearly interpolating the best-fit nuisance terms 
+# from the C^{g_i g_i} fits.
 #
-# For ell<1000, the curves for C^{g_i g_i} and C^{k g_i} correspond to a 
-# HEFT best-fit, and for ell>1000 I'm using a polynomial fit to the data.
-# The curves for C^{g_i g_j} with i \neq j are polynomial fits. All curves
-# are set to zero for ell>3000.
+# Note that the pixel window function is included, and that we have included
+# a filtering in the C^{k g_i} predictions. Explicitly this filter is 
+#                    filter = np.exp(-(l/2500)**6)
 ```
+
+The best-fit projected shot noises for the galaxy samples are `4.01e-6, 2.24e-6, 2.08e-6, 2.31e-6` respectively.

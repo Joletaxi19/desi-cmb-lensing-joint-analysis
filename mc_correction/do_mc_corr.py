@@ -15,6 +15,11 @@ nproc = comm.Get_size()
 
 def measure_cls_anafast(Isim,gal_msk,kap_msk,lensmap,NSIDE_OUT=2048,lmax=2000):
     """
+    C_gkt: cross-correlation of "galaxies" (input kappa map masked with gal map)
+           and input kappa map (masked with kappa mask)
+    C_gkr: cross-correlation of "galaxies" and reconstructed input map 
+           (masked with kap mask)
+    C_gkr_nomask: same as C_gkr but the recon kap map isn't remasked
     """
     kap_rec,kap_true = get_kappa_maps(Isim,NSIDE_OUT,lensmap)
     
@@ -63,26 +68,31 @@ def make_mc_cls(gal_name,gal_msk,kap_msk,COORD_IN,NSIDE_OUT=2048,lensmap='PR3'):
 
 def bin_mc_corr(prefix,ledges=[25.+50*i for i in range(21)]):
     # now average
-    nbin = len(ledges)-1
-    fnames = list(glob(f'{prefix}_*'))
-    centers = [(ledges[i]+ledges[i+1])/2 for i in range(nbin)]
-    data_gkt = []
-    data_gkr = []
-    ell,_,_ = np.genfromtxt(fnames[0]).T
+    nbin     = len(ledges)-1
+    fnames   = list(glob(f'{prefix}_*'))
+    centers  = [(ledges[i]+ledges[i+1])/2 for i in range(nbin)]
+    data_gkt        = []
+    data_gkr        = []
+    data_gkr_nomask = []
+    ell,_,_,_ = np.genfromtxt(fnames[0]).T
     for fn in fnames:
-        ell,C_gkt,C_gkr = np.genfromtxt(fn).T
+        ell,C_gkt,C_gkr,C_gkr_nomask = np.genfromtxt(fn).T
         data_gkt.append(C_gkt)
         data_gkr.append(C_gkr)
+        data_gkr_nomask.append(C_gkr_nomask)
     Ckgt = np.mean(data_gkt,axis=0)
     Ckgr = np.mean(data_gkr,axis=0)
+    Ckgr_nomask = np.mean(data_gkr_nomask,axis=0)
     Ckgt_bin = np.ones(nbin)
     Ckgr_bin = np.ones(nbin)
+    Ckgr_bin_nomask = np.ones(nbin)
     for i in range(nbin):
         I = np.where((ell>=ledges[i]) & (ell<ledges[i+1]))
         if len(I[0])>0:
             Ckgt_bin[i] = np.mean(Ckgt[I])
             Ckgr_bin[i] = np.mean(Ckgr[I])
-    dat = np.array([centers,Ckgt_bin/Ckgr_bin]).T
+            Ckgr_bin_nomask[i] = np.mean(Ckgr_nomask[I])
+    dat = np.array([centers,Ckgt_bin/Ckgr_bin,Ckgt_bin/Ckgr_bin_nomask]).T
     return dat
 
 
@@ -105,7 +115,7 @@ def apply_mc_corr(fnin,fnout,kapName,galNames,mccorr_prefixs):
 
 
 if __name__ == "__main__":
-    isamp   = 1
+    isamp    = 1
     lensmap  = 'PR3'
     bdir     = '/pscratch/sd/m/mwhite/DESI/MaPar/maps/'
     lrg_mask = hp.read_map(bdir+f'lrg_s0{isamp}_msk.hpx2048.fits')
@@ -114,11 +124,18 @@ if __name__ == "__main__":
     des_mask = hp.read_map('../maps/masks/des_mask.fits')
     dec15    = hp.read_map('../maps/masks/DECm15_mask.fits')
     
+    kap_mask_noapod = hp.read_map(f'../maps/masks/{lensmap}_lens_mask_noapod.fits',dtype=None)
+    
     # LRG full footprint x PR3
     if True:
         lrg_name = f'LRG_full_z{isamp}'    
         make_mc_cls(lrg_name,lrg_mask,kap_mask,'c',lensmap=lensmap)
         print('Done with MC sims for LRG full x PR3',flush=True)    
+    # LRG full footprint x PR3 (without apodization)
+    if True:
+        lrg_name = f'LRG_full_z{isamp}_noapod'    
+        make_mc_cls(lrg_name,lrg_mask,kap_mask_noapod,'c',lensmap=lensmap)
+        print('Done with MC sims for LRG full x PR3 (without apodization)',flush=True)    
     # LRG North footprint x PR3
     if False:
         lrg_name = f'LRG_north_z{isamp}'    

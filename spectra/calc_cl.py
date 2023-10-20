@@ -72,7 +72,7 @@ def master_cov(ledges,map1,msk1,map2,msk2,map3,msk3,map4,msk4,c13,c14,c23,c24):
     return cov
 
 
-def cij_poly_approx(data):
+def cij_poly_approx(data,lmax=3000,expfit=True):
     """
     Given a set of data (pseudo-cells in a .json file following
     the format of full_master) returns a (nmap,nmap,3*nside)
@@ -92,11 +92,11 @@ def cij_poly_approx(data):
     for i in range(nmaps):
         for j in range(i,nmaps):
             try:
-                lval  = np.arange(max(ell))
+                lval  = np.arange(min(max(ell),lmax))
                 cl    = np.array(data[f'cl_{names[i]}_{names[j]}'])
-                coeff = np.polyfit(ell,cl,8,w=(2*ell+1)**0.5/cl)
-                damp  = np.exp(-(10./(lval+1e-6))**6)
-                result[i,j,:len(lval)] = np.poly1d(coeff)(lval)*damp
+                if expfit: cl = np.log(np.abs(cl))
+                coeff = np.polyfit(ell,cl,14,w=1/cl**2)
+                result[i,j,:len(lval)] = np.exp(np.poly1d(coeff)(lval))
             except:
                 continue
     return result
@@ -108,7 +108,7 @@ def full_master(ledges, maps, msks, names, fnout, do_cov=False, cij=None,
     Computes power spectra and covariances and saves them in a .json format.
     It is assumed that all maps and masks have the same nside.
     
-    ledges   : list of ell-bin edges 
+    ledges   : list of lists of ell-bin edges 
     maps     : list of maps in healpix format
     msks     : list of masks in healpix format
     names    : list of strings to identify each map+mask pair with
