@@ -1,5 +1,5 @@
 # PR3/PR4 simulations are in galactic coords
-# ACT simulations are in XXX coords
+# ACT simulations are in celestial coords
 
 import numpy as np
 import healpy as hp
@@ -50,6 +50,58 @@ def get_PR4_maps(simidx,nside):
     
     return kap_recon,kap_true
 
+def get_ACT_maps(simidx,nside):
+    """
+    Returns reconstructed and true kappa map 
+    from a simulation indexed by simidx:
+    simidx = 1,..,400
+    """
+    bdir  = '/global/cfs/projectdirs/act/data/gfarren/lensingsims/baseline/'
+    bdir2 = '/pscratch/sd/j/jaejoonk/ACTxDESI/signal_v0.4/'
+    
+    # get reconstructed map
+    kappa_rec_alm = np.nan_to_num(hp.read_alm(bdir+f'all_MV_simlensing_mf-sub_mc-corr_MV_{simidx}.fits'))
+    filt          = np.ones(3*nside) ; filt[3000:] = 0. 
+    kappa_rec_alm = hp.almxfl(kappa_rec_alm,filt)
+    kap_recon     = hp.alm2map(kappa_rec_alm,nside)
+    
+    # get true map
+    true_map_alm,mmax = hp.read_alm(bdir2+f"fullskyPhi_alm_%05d.fits"%simidx,return_mmax=True)
+    true_map_alm = np.nan_to_num(true_map_alm).astype(complex)
+    pixel_idx = np.arange(len(true_map_alm))
+    L = hp.sphtfunc.Alm.getlm(mmax,i=pixel_idx)[0]
+    true_map_alm *= L*(L+1)/2 # phi -> kappa
+    kap_true      = hp.alm2map(true_map_alm,nside)
+
+    return kap_recon,kap_true
+
+def get_ACT40_maps(simidx,nside):
+    """
+    Returns reconstructed and true kappa map 
+    from a simulation indexed by simidx:
+    simidx = 1,..,400
+    """
+    bdir  = '/global/cfs/projectdirs/act/data/gfarren/lensingsims/MV_GAL040_v2/'
+    bdir2 = '/pscratch/sd/j/jaejoonk/ACTxDESI/signal_v0.4/'
+    
+    # get reconstructed map
+    kappa_rec_alm = np.nan_to_num(hp.read_alm(bdir+f'all_MV_GAL040_simlensing_mf-sub_mc-corr_MV_{simidx}.fits'))
+    filt          = np.ones(3*nside) ; filt[3000:] = 0. 
+    kappa_rec_alm = hp.almxfl(kappa_rec_alm,filt)
+    kap_recon     = hp.alm2map(kappa_rec_alm,nside)
+    
+    # get true map
+    true_map_alm,mmax = hp.read_alm(bdir2+f"fullskyPhi_alm_%05d.fits"%simidx,return_mmax=True)
+    true_map_alm = np.nan_to_num(true_map_alm).astype(complex)
+    pixel_idx = np.arange(len(true_map_alm))
+    L = hp.sphtfunc.Alm.getlm(mmax,i=pixel_idx)[0]
+    true_map_alm *= L*(L+1)/2 # phi -> kappa
+    kap_true      = hp.alm2map(true_map_alm,nside)
+
+    return kap_recon,kap_true
+ 
 def get_kappa_maps(simidx,nside,lensmap):
-    if lensmap == 'PR3': return get_PR3_maps(simidx,nside)
-    if lensmap == 'PR4': return get_PR4_maps(simidx,nside)
+    if lensmap == 'PR3'  : return get_PR3_maps(simidx,nside)
+    if lensmap == 'PR4'  : return get_PR4_maps(simidx,nside)
+    if lensmap == 'ACT'  : return get_ACT_maps(simidx,nside)
+    if lensmap == 'ACT40': return get_ACT40_maps(simidx,nside)
