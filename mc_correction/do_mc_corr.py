@@ -26,32 +26,28 @@ def measure_cls_anafast(Isim,gal_msk,kap_msk,lensmap,NSIDE_OUT=2048,lmax=2000):
     g_proxy  = kap_true * gal_msk; g_proxy  -= np.mean(g_proxy)
     k_true   = kap_true * kap_msk; k_true   -= np.mean(k_true)
     k_recmsk = kap_rec  * kap_msk; k_recmsk -= np.mean(k_recmsk)
-    kap_rec -= np.mean(kap_rec)
     
     C_gkt        = hp.anafast(g_proxy,map2=k_true  ,lmax=lmax,use_pixel_weights=True) 
     C_gkr        = hp.anafast(g_proxy,map2=k_recmsk,lmax=lmax,use_pixel_weights=True)
-    C_gkr_nomask = hp.anafast(g_proxy,map2=kap_rec ,lmax=lmax,use_pixel_weights=True)
     
     ell = np.arange(len(C_gkt))
-    dat = np.array([ell,C_gkt,C_gkr,C_gkr_nomask]).T
+    dat = np.array([ell,C_gkt,C_gkr]).T
     
     return dat
     
     
 def make_mc_cls(gal_name,gal_msk,kap_msk,COORD_IN,NSIDE_OUT=2048,lensmap='PR3'):
     """
-    assumes that COORD_IN is the same coordinate system as the CMB lensing 
-    maps in ../maps/masks/
     """
-    if lensmap == 'PR3':
+    if   lensmap == 'PR3':
         rot = Rotator(coord=f'{COORD_IN}g')
         simidx = range(300)
     elif lensmap == 'PR4':
         rot = Rotator(coord=f'{COORD_IN}g')
         simidx = np.array(list(range(60,300)) + list(range(360,600)))
-    elif lensmap == 'ACT':
-        rot = None
-        simidx = None
+    elif lensmap == 'ACT' or lensmap == 'ACT40':
+        rot = Rotator(coord=f'{COORD_IN}c')
+        simidx = range(1,401)
     else:
         print('ERROR: lensmap must be PR3, PR4 or ACT',flush=True)
         sys.exit()    
@@ -63,36 +59,31 @@ def make_mc_cls(gal_name,gal_msk,kap_msk,COORD_IN,NSIDE_OUT=2048,lensmap='PR3'):
             fname = f'sims/{gal_name}_{lensmap}_{i}.txt'
             if not exists(fname):
                 dat = measure_cls_anafast(i,gal_msk,kap_msk,lensmap,NSIDE_OUT=NSIDE_OUT)
-                np.savetxt(fname,dat,header='Columns are: ell, C_gkt, C_gkr, C_gkr_nomask')
+                np.savetxt(fname,dat,header='Columns are: ell, C_gkt, C_gkr')
 
 
-def bin_mc_corr(prefix,ledges=[25.+50*i for i in range(21)]):
+def bin_mc_corr(prefix,ledges=[25.+50*i for i in range(21)],lmax=2000):
     # now average
     nbin     = len(ledges)-1
     fnames   = list(glob(f'{prefix}_*'))
     centers  = [(ledges[i]+ledges[i+1])/2 for i in range(nbin)]
     data_gkt        = []
     data_gkr        = []
-    data_gkr_nomask = []
-    ell,_,_,_ = np.genfromtxt(fnames[0]).T
+    ell,_,_ = np.genfromtxt(fnames[0])[:,:3].T
     for fn in fnames:
-        ell,C_gkt,C_gkr,C_gkr_nomask = np.genfromtxt(fn).T
+        ell,C_gkt,C_gkr = np.genfromtxt(fn)[:,:3].T
         data_gkt.append(C_gkt)
         data_gkr.append(C_gkr)
-        data_gkr_nomask.append(C_gkr_nomask)
     Ckgt = np.mean(data_gkt,axis=0)
     Ckgr = np.mean(data_gkr,axis=0)
-    Ckgr_nomask = np.mean(data_gkr_nomask,axis=0)
     Ckgt_bin = np.ones(nbin)
     Ckgr_bin = np.ones(nbin)
-    Ckgr_bin_nomask = np.ones(nbin)
     for i in range(nbin):
         I = np.where((ell>=ledges[i]) & (ell<ledges[i+1]))
-        if len(I[0])>0:
+        if len(I[0])>0 and (ledges[i+1]<lmax):
             Ckgt_bin[i] = np.mean(Ckgt[I])
             Ckgr_bin[i] = np.mean(Ckgr[I])
-            Ckgr_bin_nomask[i] = np.mean(Ckgr_nomask[I])
-    dat = np.array([centers,Ckgt_bin/Ckgr_bin,Ckgt_bin/Ckgr_bin_nomask]).T
+    dat = np.array([centers,Ckgt_bin/Ckgr_bin]).T
     return dat
 
 
@@ -123,16 +114,20 @@ if __name__ == "__main__":
     north    = hp.read_map('../maps/masks/north_mask.fits')
     des_mask = hp.read_map('../maps/masks/des_mask.fits')
     dec15    = hp.read_map('../maps/masks/DECm15_mask.fits')
+    mask40   = hp.read_map('../maps/masks/gal40_mask.fits')
+    import sys
+    sys.path.append('../')
+    from maps.make_ACT_lens_map import ACTmask,ACT40mask
     
     kap_mask_noapod = hp.read_map(f'../maps/masks/{lensmap}_lens_mask_noapod.fits',dtype=None)
     
     # LRG full footprint x PR3
-    if True:
+    if False:
         lrg_name = f'LRG_full_z{isamp}'    
         make_mc_cls(lrg_name,lrg_mask,kap_mask,'c',lensmap=lensmap)
         print('Done with MC sims for LRG full x PR3',flush=True)    
     # LRG full footprint x PR3 (without apodization)
-    if True:
+    if False:
         lrg_name = f'LRG_full_z{isamp}_noapod'    
         make_mc_cls(lrg_name,lrg_mask,kap_mask_noapod,'c',lensmap=lensmap)
         print('Done with MC sims for LRG full x PR3 (without apodization)',flush=True)    
@@ -170,3 +165,50 @@ if __name__ == "__main__":
         lrg_name = f'LRG_full_z{isamp}'    
         make_mc_cls(lrg_name,lrg_mask,kap_mask,'c',lensmap=lensmap)
         print('Done with MC sims for LRG full x PR4',flush=True)  
+        
+        
+    lensmap  = 'ACT'    
+    
+    # cross-correlating LRGs on different footprints (full, ACT, or intersection
+    # of ACT with 40% galactic mask) with ACT on its fiducial footprint
+    
+    if False:
+        lrg_name = f'LRG_full_z{isamp}' 
+        make_mc_cls(lrg_name,lrg_mask,ACTmask,'c',lensmap=lensmap)
+        print('Done with MC sims for LRG on full footprint x ACT',flush=True)  
+        
+    if False:
+        lrg_name = f'LRG_ACT_z{isamp}' 
+        make_mc_cls(lrg_name,lrg_mask*ACTmask,ACTmask,'c',lensmap=lensmap)
+        print('Done with MC sims for LRG on ACT footprint x ACT',flush=True)  
+        
+    if False:
+        lrg_name = f'LRG_ACT40_z{isamp}'    
+        make_mc_cls(lrg_name,lrg_mask*ACT40mask,ACTmask,'c',lensmap=lensmap)
+        print('Done with MC sims for LRG on ACT40 footprint x ACT',flush=True) 
+        
+    # cross-correlating LRGs on different footprints (full, ACT, or intersection
+    # of ACT with 40% galactic mask) with ACT on the 40% footprint
+        
+    if False:
+        lrg_name = f'LRG_full_z{isamp}_40' 
+        make_mc_cls(lrg_name,lrg_mask,ACT40mask,'c',lensmap=lensmap)
+        print('Done with MC sims for LRG on full footprint x ACT40',flush=True)
+        
+    if False:
+        lrg_name = f'LRG_ACT_z{isamp}_40'    
+        make_mc_cls(lrg_name,lrg_mask*ACTmask,ACT40mask,'c',lensmap=lensmap)
+        print('Done with MC sims for LRG on ACT footprint x ACT40',flush=True)  
+  
+    if False:
+        lrg_name = f'LRG_ACT40_z{isamp}_40'    
+        make_mc_cls(lrg_name,lrg_mask*ACT40mask,ACT40mask,'c',lensmap=lensmap)
+        print('Done with MC sims for LRG on ACT40 footprint x ACT40',flush=True)    
+        
+        
+    # masking before lensing reconstruction
+    lensmap = 'ACT40'
+    if True:
+        lrg_name = f'LRG_full_z{isamp}' 
+        make_mc_cls(lrg_name,lrg_mask,ACT40mask,'c',lensmap=lensmap)
+        print('Done with MC sims for LRG on full footprint x ACT (40 before recon)',flush=True)  
