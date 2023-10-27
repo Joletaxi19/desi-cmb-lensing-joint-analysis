@@ -184,7 +184,6 @@ class gaussLike():
 
       return res
    
-      
    def maxLogLike(self, thy):
       """
       Computes the log-likelihood for the best-fit
