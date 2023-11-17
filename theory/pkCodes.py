@@ -47,7 +47,6 @@ def getCosmo(thy_args):
    cosmo.compute()
    return cosmo
 
-
 def pmmHalofit(thy_args,z):
    """
    Returns a table with shape (Nk,2). The 
@@ -65,7 +64,6 @@ def pmmHalofit(thy_args,z):
       wavevectors [h/Mpc] on which to evaluate
       the power spectrum table
    """
-   if k is None: k = ks
    k = np.logspace(np.log10(0.005),np.log10(5.),200)
    cosmo = getCosmo(thy_args)
    h = cosmo.h()
@@ -74,6 +72,59 @@ def pmmHalofit(thy_args,z):
    else: res = [Pk(zz) for zz in z]
    return np.array([k]+res).T
 
+def pggHalofit(thy_args,z,k=None):
+   """
+   Returns a Pgg table with shape (Nk,15).
+   The first column is k, while the remaining 
+   14 have monomial coefficients:
+   [1, b1, b1**2, b2, b1*b2, b2**2, bs, b1*bs, 
+   b2*bs, bs**2, b3, b1*b3, N0, alpha0]
+
+   Uses pk_cb_lin as the input linear power
+   spectrum. 
+
+   Parameters
+   ----------
+   thy_args: dict
+      cosmological inputs to CLASS
+   z: float
+      redshift
+   k: ndarray, optional
+      wavevectors [h/Mpc] on which to evaluate
+      the power spectrum table
+   """
+   k = np.logspace(np.log10(0.005),np.log10(5.),200)
+   cosmo = getCosmo(thy_args)
+   h = cosmo.h()
+   Pk = lambda zz: np.array([cosmo.pk_cb(kk*h,zz)*h**3 for kk in k])
+   return np.array([k,thy_args[6]**2*Pk(z)]).T
+
+def pgmHalofit(thy_args,z,k=None):
+   """
+   Returns a Pgg table with shape (Nk,15).
+   The first column is k, while the remaining 
+   14 have monomial coefficients:
+   [1, b1, b1**2, b2, b1*b2, b2**2, bs, b1*bs, 
+   b2*bs, bs**2, b3, b1*b3, N0, alpha0]
+
+   Uses pk_cb_lin as the input linear power
+   spectrum. 
+
+   Parameters
+   ----------
+   thy_args: dict
+      cosmological inputs to CLASS
+   z: float
+      redshift
+   k: ndarray, optional
+      wavevectors [h/Mpc] on which to evaluate
+      the power spectrum table
+   """
+   k = np.logspace(np.log10(0.005),np.log10(5.),200)
+   cosmo = getCosmo(thy_args)
+   h = cosmo.h()
+   Pk = lambda zz: np.array([cosmo.pk_cb(kk*h,zz)*h**3 for kk in k])
+   return np.array([k,thy_args[6]*Pk(z)]).T
 
 def pggVelocileptors(thy_args,z,k=None):
    """
@@ -158,9 +209,10 @@ def pmmHEFT(thy_args,z):
    at each z.
    """
    omb,omc,ns,ln10As,H0,Mnu,b1,b2,bs = thy_args
+   Mnu          = max(Mnu,0.01) # HEFT is only valid for 0.01 < Mnu < 0.5 
    cosmo        = np.zeros((len(z),8))
    cosmo[:,-1]  = z 
-   cosmo[:,:-1] = np.array([omb, omc, -1., ns, np.exp(ln10As)/10., H0, 0.06])
+   cosmo[:,:-1] = np.array([omb, omc, -1., ns, np.exp(ln10As)/10., H0, Mnu])
    k_nn, spec_heft_nn = nnemu.predict(cosmo)
    res       = np.zeros((len(k_nn),len(z)+1))
    res[:,0]  = k_nn
@@ -178,7 +230,8 @@ def ptableHEFT(thy_args,z):
    delta2-delta, delta2-delta2, s2-1, s2-cb, s2-delta, s2-delta2, s2-s2.
    """
    omb,omc,ns,ln10As,H0,Mnu,b1,b2,bs = thy_args
-   cosmo = np.atleast_2d([omb, omc, -1., ns, np.exp(ln10As)/10., H0, 0.06, z])
+   Mnu   = max(Mnu,0.01) # HEFT is only valid for 0.01 < Mnu < 0.5 
+   cosmo = np.atleast_2d([omb, omc, -1., ns, np.exp(ln10As)/10., H0, Mnu, z])
    k_nn, spec_heft_nn = nnemu.predict(cosmo)
    Nmono     = spec_heft_nn.shape[1]
    res       = np.zeros((len(k_nn),Nmono+1))
