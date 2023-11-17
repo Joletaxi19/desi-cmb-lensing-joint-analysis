@@ -320,3 +320,41 @@ class limb():
       Cgigj      = Spline(self.lval,integral)(self.l)
           
       return Cgigj
+
+
+   def computeCkgiZevolution(self, i, thy_args, mono_cross, smag, ext=3):
+      """
+      i: i'th sample
+      thy_args, mono_auto and mono_corss, and smag are all functions of z
+      """
+      # Evaluate projection kernels and power spectra.
+      # The "kgrid" is defined such that kgrid[i,j] = (l[j]+0.5)/chi(z[i])
+      thy_args_ = thy_args(self.zeff[i])
+      OmM,chistar,Ez,chi = self.background(thy_args_,self.z)
+      Wk,Wg_clust,Wg_mag = self.projectionKernels(thy_args_,bkgrnd=[OmM,chistar,Ez,chi])
+      PmmT  = self.Pmm(thy_args_,self.z)              
+      kgrid = (np.tile(self.lval+0.5,self.Nz)/np.repeat(chi,self.Nlval)).reshape((self.Nz,self.Nlval))
+      
+      PgmT = np.zeros_like(PmmT); PgmT[:,0] = PmmT[:,0].copy()
+      for k,z in enumerate(self.z):
+         monx        = np.array([1.]+list(mono_cross(z)))
+         PgmT[:,k+1] = np.dot(self.Pgm(thy_args(z),z)[:,1:],monx)
+          
+      Wgi_clust   = Wg_clust[:,i]    # (Nz) ndarray
+      Wgi_mag     = Wg_mag[:,i]      # (Nz) ndarray
+              
+      PgmGrid = np.zeros_like(kgrid)   
+      PmmGrid = np.zeros_like(kgrid) 
+      for k in range(self.Nz): 
+         PgmGrid[k,:] = Spline(PgmT[:,0],PgmT[:,k+1],ext=1)(kgrid[k,:])     
+         PmmGrid[k,:] = Spline(PmmT[:,0],PmmT[:,k+1],ext=1)(kgrid[k,:])
+          
+      def reshape_kernel(kernel): return np.repeat(kernel/chi**2.,self.Nlval).reshape(kgrid.shape)    
+          
+      ##### Ckgi
+      integrand  = reshape_kernel(Wk*Wgi_clust)                  * PgmGrid
+      integrand += reshape_kernel((5*smag(self.z)-2)*Wk*Wgi_mag) * PmmGrid
+      integral   = simps(integrand,x=chi,axis=0)
+      Ckgi       = Spline(self.lval,integral)(self.l)
+          
+      return Ckgi
