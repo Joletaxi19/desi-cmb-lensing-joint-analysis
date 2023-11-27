@@ -18,8 +18,8 @@ def classyBackground(thy_args, zs):
    
    Parameters
    ----------
-   thy_args: dict
-      inputs to CLASS for computing background quantities
+   thy_args: list or ndarray
+      omb,omc,ns,ln10As,H0,Mnu = thy_args[:6]
    zs: list OR ndarray
       redshifts to evaluate chi(z) and E(z) 
    """
