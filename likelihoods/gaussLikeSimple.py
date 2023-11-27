@@ -1,5 +1,4 @@
 import numpy as np
-from math import isinf
 
 class gaussLike():
    """
@@ -7,44 +6,10 @@ class gaussLike():
    
    If no analytic marginalization is requred, then all 
    log-likelihoods are "true" likelihoods up to a 
-   constant = -ln(P(dat)). When analytic marginalization
-   over a set of templates is required, all log-likelihoods 
-   correspond to the ("true" likelihood) x (the priors of 
+   constant. When analytic marginalization over a set of 
+   templates is required, all log-likelihoods correspond 
+   to the ("raw" likelihood) x (the priors of 
    the template coefficients), up to the same constant.
-   
-   ...
-   
-   Attributes
-   ----------
-   D : int
-      number of data points
-   T : int, default=0
-      number of templates for analytic marginalization
-   dat : (D) ndarray
-      data vector
-   cov : (D,D) ndarray
-      covariance matrix
-   thy : function
-      returns theory prediction, which is a ndarray
-      with shape (D) when T = 0 or (D,1+T) when T > 0
-   tmp_priors : None OR (T,2) ndarray, default=None 
-      Gaussian priors for coefficients multiplying theory 
-      templates. tmp_priors[:,0] are the means while
-      tmp_priors[:,1] are the standard deviations.
-      
-   Methods
-   -------
-   templatePrior(tmp_prm)
-      Computes prior for template coefficients
-   rawLogLike(thy_args, tmp_prm=None)
-      Computes the 'raw' log-likelihood
-   anaHelp(thy_args)
-      Helper function for margLogLike and maxLogLike
-   margLogLike(thy_args)
-      Computes the analytically-marginalized log-likelihood
-   maxLogLike(thy_args)
-      Computes the log-likelihood for the best-fit
-      template coefficients
    """
 
    def __init__(self, dat, cov, tmp_priors=None):
@@ -72,7 +37,6 @@ class gaussLike():
       if tmp_priors is not None:
          self.T       = tmp_priors.shape[0]
       
-      
    def templatePrior(self,tmp_prm):
       """
       Computes prior for template coefficients
@@ -88,15 +52,14 @@ class gaussLike():
       volfac = np.prod(2*np.pi*self.tmp_priors[:,1]**2)**0.5
       return np.exp(-0.5*chi2) / volfac
       
-      
    def rawLogLike(self, thy, tmp_prm=None):
       """
       Computes the 'raw' log-likelihood
       
       Parameters
       ----------
-      thy_args : dict
-         inputs to self.thy function
+      thy: ndarray
+         theory prediction tables
       tmp_prm : None OR (T) ndarray, default=None
          values of the T template coefficients
 
@@ -122,15 +85,14 @@ class gaussLike():
       chi2  = np.dot(delt,np.dot(self.cinv,delt))
       return -0.5*chi2 + np.log(self.templatePrior(tmp_prm))
 
-    
    def anaHelp(self, thy):
       """
       Helper function for margLogLike and maxLogLike
 
       Parameters
       ----------
-      thy_args : dict
-         inputs to self.thy function
+      thy: ndarray
+         theory prediction tables
 
       Raises
       ------
@@ -153,15 +115,14 @@ class gaussLike():
       V = np.array(V) - np.dot(CphiInv,self.tmp_priors[:,0])
       return delt,M,V
       
-      
    def margLogLike(self, thy):
       """
       Computes the analytically-marginalized log-likelihood
       
       Parameters
       ----------
-      thy_args : dict
-         inputs to self.thy function
+      thy: ndarray
+         theory prediction tables
       """
       if self.T == 0.: 
          return self.rawLogLike()
@@ -184,6 +145,20 @@ class gaussLike():
 
       return res
    
+   def getBestFitTemp(self, thy):
+      """
+      Computes the best-fit values
+      of the template parameters.
+      
+      Parameters
+      ----------
+      thy: ndarray
+         theory prediction tables
+      """
+      delt,M,V = self.anaHelp(thy)
+      tmp_prm_star = -1*np.dot(M,V)
+      return tmp_prm_star
+    
    def maxLogLike(self, thy):
       """
       Computes the log-likelihood for the best-fit
@@ -191,30 +166,24 @@ class gaussLike():
       
       Parameters
       ----------
-      thy_args : dict
-         inputs to self.thy function
+      thy: ndarray
+         theory prediction tables
       """
       if self.T == 0:
-         return self.rawLogLike(thy)
-          
-      delt,M,V = self.anaHelp(thy)
-      tmp_prm_star = -1*np.dot(M,V)
+         return self.rawLogLike(thy)    
+      tmp_prm_star = self.getBestFitTemp(thy)
       return self.rawLogLike(thy,tmp_prm=tmp_prm_star)
-
-   def getBestFitTemp(self, thy):
-      """
-      Computes the best-fit values
-      of the template parameters.
-      """
-      delt,M,V = self.anaHelp(thy)
-      tmp_prm_star = -1*np.dot(M,V)
-      return tmp_prm_star
 
    def getBestFit(self, thy):
       """
       Returns theory prediction when all
       of the linear parameters are fixed
       to their best-fit values.
+      
+      Parameters
+      ----------
+      thy: ndarray
+         theory prediction tables
       """
       tmp_prm_star = self.getBestFitTemp(thy)
       monomials = np.array([1.]+list(tmp_prm_star))
