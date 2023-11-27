@@ -36,7 +36,7 @@ class gaussLike():
       self.T          = 0
       if tmp_priors is not None:
          self.T       = tmp_priors.shape[0]
-      
+
    def templatePrior(self,tmp_prm):
       """
       Computes prior for template coefficients
@@ -51,7 +51,7 @@ class gaussLike():
       chi2   = np.sum((delt/self.tmp_priors[:,1])**2.)
       volfac = np.prod(2*np.pi*self.tmp_priors[:,1]**2)**0.5
       return np.exp(-0.5*chi2) / volfac
-      
+
    def rawLogLike(self, thy, tmp_prm=None):
       """
       Computes the 'raw' log-likelihood
@@ -114,7 +114,7 @@ class gaussLike():
       V = [np.dot(B[:,i],np.dot(self.cinv,delt)) for i in range(self.T)]
       V = np.array(V) - np.dot(CphiInv,self.tmp_priors[:,0])
       return delt,M,V
-      
+
    def margLogLike(self, thy):
       """
       Computes the analytically-marginalized log-likelihood
@@ -158,7 +158,7 @@ class gaussLike():
       delt,M,V = self.anaHelp(thy)
       tmp_prm_star = -1*np.dot(M,V)
       return tmp_prm_star
-    
+
    def maxLogLike(self, thy):
       """
       Computes the log-likelihood for the best-fit
