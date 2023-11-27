@@ -5,38 +5,44 @@ from scipy.interpolate import InterpolatedUnivariateSpline as Spline
     
 class limb():
    """
-   A class for computing Cgg and Ckg.
-
-   MORE DOCS TO COME
-   
-   ...
-   
-   Attributes
-   ----------
-   z: (Nz) ndarray
-      ...
-   dNdz: (Nz,Ng) ndarray
-      redshift distribution of the galaxy sample(s)
-   Ng: int
-      number of galaxy samples
-      
-   Methods
-   -------
-   XXXXX
+   Calculate Ckg and Cgg within the Limber approximation.
    """
-   
    def __init__(self, dNdz, thy_fid, Pgm, Pgg, Pmm, background, lmax=1000, Nlval=64, zmin=0.001, zmax=2., Nz=50):
       """
       Parameters
       ----------
-      dNdz_fname: str OR ndarray
-         redshift distribution filename. 
+      dNdz: str or ndarray
+         Redshift distribution filename, or a (Nz,1+Ng) ndarray where the first column is z, and the 
+         remaining columns are the redshift distributions for each galaxy sample
+      thy_fid: list or ndarray
+         Fiducial theory parameters (format depends on theory codes). Only used to compute effective
+         redshifts, which weakly depend on the fiducial cosmology assumed. thy_fid should take the 
+         same form as the thy_args used as inputs for (Pgm, Pgg, Pgm).
+      Pgm: method
+         Takes (thy_args,z) as inputs and returns Pgm table (a (Nk,1+Nmono_cross) narray). The 
+         first column is k. The full prediction is np.dot(Pgm[:,1:],coeff_cross), where coeff_cross[1:]
+         is a set of coefficients for the linear nuisance parameters. It is assumed that coeff_cross[0]=1.
+      Pgg: method
+         Takes (thy_args,z) as inputs and returns Pgg table (a (Nk,1+Nmono_auto) narray). The 
+         first column is k. The full prediction is np.dot(Pgg[:,1:],coeff_auto), where coeff_auto[1:]
+         is a set of coefficients for the linear nuisance parameters. It is assumed that coeff_auto[0]=1.
+      Pmm: method
+         Takes (thy_args,zs) as inputs and returns Pmm table (a (Nk,1+Nz) narray). The first 
+         column is k, while the remaining Nz columns are the matter power spectrum evaluated
+         at each z in zs.
+      background: method
+         Takes (thy_args,zs) as inputs and returns OmM,chistar,Ez(zs),chi(zs).
+      lmax: int
+         Maximum ell used when computing Cells.
+      Nlval: int
+         Number of ell's used for Cell evaluation. Remaining Cell's are approximated with a spline. 
+         Increase Nlval to increase the accuracy of the spline interpolation.
       zmin: float
-         ...
+         Minimum redshift used for Limber integrals.
       zmax: float
-         ...
+         Maximum redshift used for Limber integrals.
       Nz: int
-         ...
+         Number of redshifts used in Limber integrands.
       """
       if isinstance(dNdz,str): dNdz = np.loadtxt(dNdz)
       self.Ng    = dNdz.shape[1] - 1
@@ -44,12 +50,6 @@ class limb():
       self.zmax  = zmax
       self.Nz    = Nz
       self.z     = np.linspace(zmin,zmax,Nz)
-        
-      # evaluate dNdz on regular grid and normalize it so 
-      # that \int dN/dz dz = 1 for each galaxy sample
-      self.dNdz  = interp1d(dNdz[:,0],dNdz[:,1:],axis=0,bounds_error=False,fill_value=0.)(self.z)
-      self.dNdz  = self.dNdz.reshape((self.Nz,self.Ng))   # does nothing for Ng > 1
-
       self.l     = np.arange(lmax+1) 
       self.lval  = np.logspace(0,np.log10(lmax),Nlval)
       self.Nl    = len(self.l)
@@ -70,9 +70,8 @@ class limb():
       self._thy_fid  = thy_fid
       # compute effective redshifts      
       self.computeZeff()
-
                           
-   # Recompute effective redshifts whenever the 
+   # Recompute effective redshifts if the 
    # fiducial cosmology changes 
    @property
    def thy_fid(self): return self._thy_fid
@@ -85,8 +84,7 @@ class limb():
       """
       Computes the effective redshift for each galaxy sample 
       assuming the fiducial cosmology and saves them to 
-      self.zeff, which is a (Ng) ndarray. If no background 
-      theory has been supplied, sets self.zeff = None.
+      self.zeff, which is a (Ng) ndarray.
       """
       OmM,chistar,Ez,chi = self.background(self.thy_fid,self.z)
       _,Wg,_             = self.projectionKernels(self.thy_fid)
@@ -96,8 +94,7 @@ class limb():
          return numer/denom
       self.zeff = np.array([zeff(i) for i in range(self.Ng)])
 
-    
-   def evaluate(self, i, thy_args, verbose=True):
+   def evaluate(self, i, thy_args):
       """
       Computes background quantities, projection kernels,
       and power spectra for a given cosmology. Returns
@@ -115,11 +112,10 @@ class limb():
       
       Parameters
       ----------
+      i: int
+         galaxy sample
       thy_args: type can vary according to theory codes
          cosmological inputs
-      verbose: bool, default=True
-         when True, prints message when theory code 
-         (Pgg, Pgm, Pmm, or background) is missing
       """
       OmM,chistar,Ez,chi = self.background(thy_args,self.z)
       Wk,Wg_clust,Wg_mag = self.projectionKernels(thy_args,bkgrnd=[OmM,chistar,Ez,chi])
@@ -128,7 +124,6 @@ class limb():
       Pmm_eval = self.Pmm(thy_args,self.z)
       return chi,Wk,Wg_clust,Wg_mag,Pgm_eval,Pgg_eval,Pmm_eval
 
-       
    def gridMe(self,x):
       """
       Places input on a (Nz,Ng) grid. If x is z-independent, 
@@ -156,7 +151,6 @@ class limb():
       else: 
          s = 'input must satisfy len = self.Ng or self.Nz'
          raise RuntimeError(s)
-      
       
    def projectionKernels(self, thy_args, bkgrnd=None):
       """
@@ -207,9 +201,26 @@ class limb():
       
       return Wk,Wg_clust,Wg_mag
 
-
    def computeCggCkg(self, i, thy_args, smag, ext=3):
       """
+      Computes Cgg and Ckg for the i'th galaxy sample given a set of theory
+      parameters (thy_args) and magnification bias (smag). 
+      
+      Cgg and Ckg are (Nl,Nmono_tot) ndarrays. The full prediction for e.g. Cgg
+      is given by np.dot(Cgg,coeff_tot), where coeff_tot is a (Nmono_tot) ndarray.
+      The coefficients take the form
+      coeff_tot = [1, linear Pgg coeffs, SHOT NOISE, linear Pgm coeffs]
+      NOTE THAT SHOT NOISE IS ADDED (a column of ones for Cgg, and a column of zeros for Ckg)
+      BY DEFAULT, SO SHOT NOISE SHOULD NOT BE INCLUDED AS A MONOMIAL FOR Pgg.
+      
+      Parameters
+      ----------
+      i: int
+         galaxy sample
+      thy_args: type can vary according to theory codes
+         cosmological inputs
+      smag: float
+         magnification bias s_\mu
       """
       # Evaluate projection kernels and power spectra.
       # The "kgrid" is defined such that kgrid[i,j] = (l[j]+0.5)/chi(z[i])
@@ -271,7 +282,6 @@ class limb():
           
       return Cgg,Ckg
 
-
    def computeCgigjZevolution(self, i, j, thy_args, mono_auto, mono_cross, smag, ext=3):
       """
       i: i'th sample
@@ -325,7 +335,7 @@ class limb():
    def computeCkgiZevolution(self, i, thy_args, mono_cross, smag, ext=3):
       """
       i: i'th sample
-      thy_args, mono_auto and mono_corss, and smag are all functions of z
+      thy_args, mono_auto and mono_cross, and smag are all functions of z
       """
       # Evaluate projection kernels and power spectra.
       # The "kgrid" is defined such that kgrid[i,j] = (l[j]+0.5)/chi(z[i])
