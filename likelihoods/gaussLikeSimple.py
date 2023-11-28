@@ -5,7 +5,7 @@ class gaussLike():
    A Gaussian likelihood class. 
    
    If no analytic marginalization is requred, then all 
-   log-likelihoods are "true" likelihoods up to a 
+   log-likelihoods are "raw" likelihoods up to a 
    constant. When analytic marginalization over a set of 
    templates is required, all log-likelihoods correspond 
    to the ("raw" likelihood) x (the priors of 
@@ -20,12 +20,11 @@ class gaussLike():
          data vector
       cov : (D,D) ndarray
          covariance matrix
-      thy : function
-         returns theory prediction, which is a ndarray
-         with shape (D) when T = 0 or (D,1+T) when T > 0
       tmp_priors : None OR (T,2) ndarray, default=None 
-         Gaussian priors for coefficients multiplying theory 
-         templates. tmp_priors[:,0] are the means while
+         Theory prediction is a ndarray with shape (D,1+T). 
+         The last T columns are the templates to be marginaled over.
+         tmp_priors specifices the priors on the coefficients multiplying
+         those templates.tmp_priors[:,0] are the means while 
          tmp_priors[:,1] are the standard deviations.
       """
       
