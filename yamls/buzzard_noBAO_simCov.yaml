@@ -10,7 +10,10 @@ likelihood:
     galNames: [LRGz1,LRGz2,LRGz3,LRGz4]
     # redshift distribution filenames (one for each galaxy sample)
     dndzfns:
-    - /pscratch/sd/n/nsailer/MaPar/mocks/buzzard/combined_dNdz.txt
+    - /pscratch/sd/n/nsailer/MaPar/mocks/buzzard/dNdz_z1.txt
+    - /pscratch/sd/n/nsailer/MaPar/mocks/buzzard/dNdz_z2.txt
+    - /pscratch/sd/n/nsailer/MaPar/mocks/buzzard/dNdz_z3.txt
+    - /pscratch/sd/n/nsailer/MaPar/mocks/buzzard/dNdz_z4.txt
     # scale cuts
     amin: [75,75,75,75]
     amax: [600,600,600,600]

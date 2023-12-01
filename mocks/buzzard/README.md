@@ -11,7 +11,7 @@ Covariance for PR4: `lrg_pr4_multi_cov.txt`. Basis is (Cgg1, Ckg1, Cgg2, Ckg2, .
 # inputs
 n_s       = 0.96 
 h         = 0.7 
-A_s       = 2.145e-09 
+A_s       = 2.1186e-09 
 omega_b   = 0.02254 
 omega_cdm = 0.1176
 

@@ -1,17 +1,14 @@
-#!/usr/bin/env python3
-# makes the PR4 kappa map and mask in equatorial coordinates
-# after low pass filtering
-# also saves a file to ../data/PR4_lens_nlkk_filt.txt with 
-# the low pass filtered noise curves
-
 import numpy    as np
 import healpy   as hp
 import pymaster as nmt
 import os
 import urllib.request
+import sys
+sys.path.append('../')
+from globe import NSIDE,COORD
 #
 lowpass = True
-Nside   = 2048
+Nside   = NSIDE
 # Read the data, mask and noise properties.
 bdir    = '/global/cfs/cdirs/cmb/data/planck2020/PR4_lensing/'
 pl_klm  = np.nan_to_num(hp.read_alm(bdir+'PR4_klm_dat_p.fits'))
@@ -58,7 +55,7 @@ if lowpass:
                        format(pl_nkk[i,0],pl_nkk[i,1],pl_nkk[i,2]))
 # rotate from galactic to celestial coordinates
 pl_kappa = hp.alm2map(pl_klm,Nside)
-rot      = hp.rotator.Rotator(coord='gc')
+rot      = hp.rotator.Rotator(coord=f'g{COORD}')
 pl_kappa = rot.rotate_map_pixel(pl_kappa)
 pl_mask  = rot.rotate_map_pixel(pl_mask)
 #
@@ -73,7 +70,4 @@ else:
 hp.write_map(outfn,pl_kappa,dtype='f4',coord='C',overwrite=True)
 outfn    = 'masks/PR4_lens_mask.fits'
 hp.write_map(outfn,hp.ud_grade(pl_mask_apod,Nside),dtype='f4',\
-             coord='C',overwrite=True)
-outfn    = 'masks/PR4_lens_mask_noapod.fits'
-hp.write_map(outfn,hp.ud_grade(pl_mask,Nside),dtype='f4',\
              coord='C',overwrite=True)

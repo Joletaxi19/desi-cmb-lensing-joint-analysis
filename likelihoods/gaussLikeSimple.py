@@ -23,9 +23,9 @@ class gaussLike():
       tmp_priors : None OR (T,2) ndarray, default=None 
          Theory prediction is a ndarray with shape (D,1+T). 
          The last T columns are the templates to be marginaled over.
-         tmp_priors specifices the priors on the coefficients multiplying
-         those templates.tmp_priors[:,0] are the means while 
-         tmp_priors[:,1] are the standard deviations.
+         tmp_priors specifices the Gaussian priors on the coefficients 
+         multiplying those templates. tmp_priors[:,0] are the means 
+         while tmp_priors[:,1] are the standard deviations.
       """
       
       self.dat        = dat

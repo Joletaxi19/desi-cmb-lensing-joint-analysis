@@ -1,18 +1,14 @@
-#!/usr/bin/env python3
-#
-# Prepare the Planck (2018) lensing maps from the files provided at
-# https://pla.esac.esa.int/ cosmology products, lensing products
-# as COM_Lensing_4096_R3.00.tgz
-#
-#
 import numpy    as np
 import healpy   as hp
 import pymaster as nmt
 import os
 import urllib.request
+import sys
+sys.path.append('../')
+from globe import NSIDE,COORD
 #
 lowpass = True
-Nside=2048
+Nside=NSIDE
 # download data 
 # Read the data, mask and noise properties.
 website = 'http://pla.esac.esa.int/pla/aio/product-action?COSMOLOGY.FILE_ID='
@@ -50,7 +46,7 @@ if lowpass:
                        format(pl_nkk[i,0],pl_nkk[i,1],pl_nkk[i,2]))
 # rotate from galactic to celestial coordinates
 pl_kappa = hp.alm2map(pl_klm,Nside)
-rot      = hp.rotator.Rotator(coord='gc')
+rot      = hp.rotator.Rotator(coord=f'g{COORD}')
 pl_kappa = rot.rotate_map_pixel(pl_kappa)
 pl_mask  = rot.rotate_map_pixel(pl_mask)
 #
@@ -67,7 +63,3 @@ hp.write_map(outfn,pl_kappa,dtype='f4',coord='C',overwrite=True)
 outfn    = 'masks/PR3_lens_mask.fits'
 hp.write_map(outfn,hp.ud_grade(pl_mask_apod,Nside),dtype='f4',\
              coord='C',overwrite=True)
-outfn    = 'masks/PR3_lens_mask_noapod.fits'
-hp.write_map(outfn,hp.ud_grade(pl_mask,Nside),dtype='f4',\
-             coord='C',overwrite=True)
-#

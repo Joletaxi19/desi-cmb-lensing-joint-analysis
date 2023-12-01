@@ -4,13 +4,12 @@ from   astropy.table import Table
 import urllib.request
 import os
 
-def make_footprint_masks(NSIDE_OUT=2048, COORD_OUT='c', outdir='masks', 
-                         deccuts=[-15,-30], ebvcuts=[0.05,0.1,0.15], 
-                         verbose_sffx=False):
+def make_aux_masks(NSIDE_OUT=2048, COORD_OUT='c', outdir='masks', deccuts=[-15,-30], 
+                   ebvcuts=[0.05,0.1,0.15], starcuts=[2500,1250], verbose_sffx=False):
     """
     Makes the following (binary) masks
-        ngc_mask.fits          | NGC is defined as DEC >  0 
-        sgc_mask.fits          | SGC is defined as DEC <= 0
+        ngc_mask.fits          | NGC 
+        sgc_mask.fits          | SGC 
         north_mask.fits        | (DEC > 32.375) and NGC
         des_mask.fits          | DES is defined as everywhere with positive "detection 
                                  fraction" in any of the DES DR2 g,r,i,z,Y bands.
@@ -19,6 +18,9 @@ def make_footprint_masks(NSIDE_OUT=2048, COORD_OUT='c', outdir='masks',
                                  is defined by DEC <= \PM #
         ebv_#_mask.fits        | creates a mask for each # [float] in ebvcuts that is 
                                  is defined by EBV <= #
+        gal#_mask.fits         | Planck 60% and 40% galactic masks
+        star_#_mask.fits       | creates a mask satisfying stellar-density<# for each
+                                 # in starcuts [stars per square degree]
     at a given NSIDE_OUT and COORD_OUT system, and saves them to outdir/. If 
     verbose_sffx=True, appends the string "_cord.{COORD_OUT}_nside.{NSIDE_OUT}" 
     to the end of each mask name.
@@ -94,7 +96,46 @@ def make_footprint_masks(NSIDE_OUT=2048, COORD_OUT='c', outdir='masks',
         mask = np.ones(npix)
         mask[np.where(ebv_sfd>cut)] = 0.
         hp.write_map(f'{outdir}/ebv_{cut:0.2f}_mask{sffx}.fits',mask,overwrite=True,dtype=np.int32)
+        
+    # Fetch 40% and 60% galactic masks from PLA  
+    website = 'http://pla.esac.esa.int/pla/aio/product-action?MAP.MAP_ID='
+    fname   = 'HFI_Mask_GalPlane-apo0_2048_R2.00.fits'
+    urllib.request.urlretrieve(website+fname, fname)
+    # rotate from galactic to COORD_OUT coords
+    # and write to .fits files
+    msk40_gal = hp.read_map(fname,field=1)
+    msk60_gal = hp.read_map(fname,field=2)
+    rot       = hp.rotator.Rotator(coord=f'g{COORD_OUT}')
+    msk40     = np.round(rot.rotate_map_pixel(hp.ud_grade(msk40_gal,NSIDE_OUT)))
+    msk60     = np.round(rot.rotate_map_pixel(hp.ud_grade(msk60_gal,NSIDE_OUT)))
+    hp.write_map(f'{outdir}/gal40_mask{sffx}.fits',msk40,overwrite=True,dtype=np.int32)
+    hp.write_map(f'{outdir}/gal60_mask{sffx}.fits',msk60,overwrite=True,dtype=np.int32)
+    # delete the file from the web
+    os.remove(fname)
+    
+    # Make stellar density masks
+    release   = 'dr9'
+    version   = '1.0.0'
+    db        = '/global/cfs/cdirs/desi/target/catalogs/'
+    db       += release+'/'+version+'/pixweight/main/resolve/dark/'
+    fn        = db+'pixweight-1-dark.fits'
+    pxw_nside = 256
+    pxw_nest  = True
+    pxw       = Table.read(fn)
+    stars_nside = 64
+    stars     = hp.ud_grade(pxw['STARDENS'],stars_nside,order_in='NEST',order_out='RING')
+    theta,phi = hp.pix2ang(NSIDE_OUT,np.arange(12*NSIDE_OUT**2))
+    ipix      = hp.ang2pix(stars_nside,theta,phi)
+    rot       = hp.rotator.Rotator(coord=f'c{COORD_OUT}')
+    for cut in np.array(starcuts):
+        mask  = np.ones(12*NSIDE_OUT**2)
+        mask[stars[ipix]>cut] = 0.
+        mask  = np.round(rot.rotate_map_pixel(mask))
+        hp.write_map(f'{outdir}/star_{int(cut)}_mask{sffx}.fits',mask,overwrite=True,dtype=np.int32)
     
 
 if __name__ == "__main__":
-    make_footprint_masks()
+    import sys
+    sys.path.append('../')
+    from globe import NSIDE,COORD
+    make_aux_masks(NSIDE_OUT=NSIDE,COORD_OUT=COORD)

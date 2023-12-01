@@ -4,43 +4,28 @@
 # select target types and randoms.
 # Use the combination to generate a density map
 # and a (binary) mask.
-#
 import numpy  as np
 import healpy as hp
 import glob
 import sys
 from   astropy.table import Table
-
-
 from assign_randoms_weights import get_randoms_weights
-
+import sys
+sys.path.append('../')
+from globe import NSIDE,COORD
 
 from mpi4py import MPI
 comm = MPI.COMM_WORLD
 rank = comm.Get_rank()
 nproc= comm.Get_size()
 
-
-
 def toMag(depth,ext,ebv):
     """A 'safe' conversion of depth to magnitude."""
     dd = np.sqrt( depth.clip(1e-30,1e30) )
     mag= -2.5*(np.log10(5/dd)-9) - ext*ebv
     return(mag)
-    #
 
-
-if __name__=="__main__":
-    if len(sys.argv)==1:
-        # Set a default sample.
-        isamp = 1
-    elif len(sys.argv)==2:
-        # Use the argument as isamp.
-        isamp = int(sys.argv[1])
-    else:
-        print("Usage: "+sys.argv[0]+" [isamp]")
-        comm.Barrier()
-        comm.Abort(1)
+def make_lrg_map(isamp,ebv_cut=0.15,star_cut=2500.):
     # Set up the pz_bin based on isamp.
     pz_bin = isamp%10
     # Write a log file, to get around annoying buffering issues
@@ -50,28 +35,20 @@ if __name__=="__main__":
         flog.write("Running "+sys.argv[0]+" on "+str(nproc)+" ranks.\n")
         flog.write("Generating sample "+str(isamp)+"\n")
         flog.write("Setting pz_bin to "+str(pz_bin)+"\n")
-    #
     # We will make the maps with a different resolution and ordering than
     # HPXPIXEL that is already provided (typically NSIDE=64, NEST=True).
-    # We will convert from celestial to galactic coordinates.
     # Typically we make the systematics maps with lower nside than we
     # want the final maps to be, so put a flag for writing systmaps.
-    nside = 2048
+    nside = NSIDE
     npix  = 12*nside**2
     isnest= False
     if rank==0:
         flog.write("Will write {:d} pixels (Nside={:d}).\n".format(npix,nside))
         flog.write("Format isnest="+str(isnest)+"\n\n")
-    ##rot = hp.rotator.Rotator(coord=['C','G'])
-    #
+    rot = hp.rotator.Rotator(coord=['c',COORD])
     # Set up the data release and version info we'll use.
-    #
     release = 'dr9'
     version = '1.0.0'
-    #
-    # Cuts on extinction and stellar density to be applied throughout.
-    ebv_cut,star_cut = 0.15,2500.
-    #
     # There is some useful information in the "pixweight" files.
     # The pixweight file is in "Celestial" coordinates and in
     # the Nest format at Nside=256.
@@ -92,9 +69,7 @@ if __name__=="__main__":
     stars_nside = 64
     stars = hp.ud_grade(pxw['STARDENS'],stars_nside,\
                         order_in='NEST',order_out='NEST')
-    #
     # Start with the data.
-    #
     db = '/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/catalogs/'
     fn = 'dr9_lrg_pzbins_20230509.fits'
     if rank==0:
@@ -134,7 +109,7 @@ if __name__=="__main__":
         # generate the partial map:
         if len(tt)>0:
             theta,phi = np.radians(90-tt['DEC']),np.radians(tt['RA'])
-            ##theta,phi = rot(theta,phi) # C->G coordinates
+            theta,phi = rot(theta,phi) # C->COORD coordinates
             pixnum    = hp.ang2pix(nside,theta,phi,nest=isnest)
             tmp, _    = np.histogram(pixnum,bins=np.arange(npix+1)-0.5)
             dmap     += tmp
@@ -223,7 +198,7 @@ if __name__=="__main__":
         # Now bin the randoms into the map, here we convert coordinate
         # systems.
         theta,phi = np.radians(90-tt['DEC']),np.radians(tt['RA'])
-        ##theta,phi = rot(theta,phi) # C->G coordinates
+        theta,phi = rot(theta,phi) # C->G coordinates
         pixnum    = hp.ang2pix(nside,theta,phi,nest=isnest)
         # Produce weighted and unweighted maps.
         tmp, _ = np.histogram(pixnum,weights=wt,bins=np.arange(npix+1)-0.5)
@@ -288,9 +263,8 @@ if __name__=="__main__":
         flog.write("Shot noise   is {:e}\n".format(shot))
         flog.write("Sky fraction is {:f}\n".format(np.sum(mask)/mask.size))
         flog.close()
-        # Write the basic maps we always want.  Do this at multiple
-        # resolutions.
-        for outnside in [2048]:
+        # Write the basic maps we always want.
+        for outnside in [NSIDE]:
             pref = "lrg_s{:02d}".format(isamp)
             hpex = ".hpx{:04d}.fits".format(outnside)
             nmap = hp.ud_grade(omap,outnside)
@@ -299,4 +273,17 @@ if __name__=="__main__":
             nmap = hp.ud_grade(mask,outnside)
             hp.write_map(pref+"_msk"+hpex,nmap,dtype='f4',\
                      nest=isnest,coord='G',overwrite=True)
-    #
+            
+            
+if __name__=="__main__":
+    if len(sys.argv)==1:
+        # Set a default sample.
+        isamp = 1
+    elif len(sys.argv)==2:
+        # Use the argument as isamp.
+        isamp = int(sys.argv[1])
+    else:
+        print("Usage: "+sys.argv[0]+" [isamp]")
+        comm.Barrier()
+        comm.Abort(1)
+    make_lrg_map(isamp)
