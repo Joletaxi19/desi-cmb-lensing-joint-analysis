@@ -24,11 +24,11 @@ likelihood:
     # prior on shot noise (sigma = fidSN*snfrac)
     snfrac:   0.3
     # fiducial alpha_auto and priors
-    fida0:  [0.]
-    a0prior: [50.]
+    fida0:  [0.,0.,0.,0.]
+    a0prior: [50.,50.,50.,50.]
     # fiducial alpha_cross and priors (actually epsilon is chenprior=True)
-    fidaX:  [0.]
-    aXprior: [2.]
+    fidaX:  [0.,0.,0.,0.]
+    aXprior: [2.,2.,2.,2.]
     # Chen prior
     # when this is true alpha_x = alpha_0/(2*b^E_1) + epsilon
     # and the fidaX, aXprior are the fiducial values and priors
