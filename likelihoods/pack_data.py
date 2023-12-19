@@ -112,8 +112,8 @@ def pack_dndz(dndzs,zmin=0.05,nz=500):
     Cuts off the redshift distribution below z<zmin
     """
     n  = len(dndzs)
-    zs = np.array([dndzs[i][:,0] for i in range(n)])
-    zmax = np.max(zs)
+    zs = [dndzs[i][:,0] for i in range(n)]
+    zmax = np.max(np.concatenate(zs).flatten())
     zeval = np.linspace(zmin,zmax,nz)
     dndz = np.zeros((len(zeval),n+1))
     dndz[:,0] = zeval

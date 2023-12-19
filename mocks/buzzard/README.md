@@ -22,7 +22,7 @@ sigma8         = 0.82
 
 ### Magnification biases
 
-For each redshift bin: `1.062, 0.973, 0.825 0.8`
+For each redshift bin: `1.062, 0.973, 0.825, 0.8`
 
 ### Projected shot noise
 

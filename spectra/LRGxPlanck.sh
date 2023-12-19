@@ -11,5 +11,5 @@ date
 module load evp-patch
 conda activate noah_base
 export OMP_NUM_THREADS=32
-srun -N 1 -n 1 -c 32 python LRGxPlanck.py 4
+srun -N 1 -n 1 -c 32 python LRGxPlanck_newBins.py 4
 date

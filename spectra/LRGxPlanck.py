@@ -1,5 +1,7 @@
 from calc_cl import *
+sys.path.append('../')
 sys.path.append('../mc_correction/')
+from globe import LEDGES
 from do_mc_corr import apply_mc_corr
 
 if len(sys.argv) != 2:
@@ -20,23 +22,20 @@ fnout     = f'LRGxPR{ver}.json'
 fncor     = f'LRGxPR{ver}_mccorr.json'
 
 # define ell-bins, and give our maps+maps some names
-ledges   = [25+50*i for i in range(120)]
 kapName  = f'PR{ver}'
 galNames = ['LRGz1','LRGz2','LRGz3','LRGz4']
+names    = [kapName]+ galNames
 msks     = kap_mask + lrg_masks
 maps     = kap_map  + lrg_maps
-# compute power spectra and window functions, save to json file
-full_master(ledges,maps,msks,kapName+galNames,fnout)
-# correct for the lensing normalization using
-# the MC calculations (labeled by prefix), overwrite old json file
-prefixs = [f'LRG_full_z1_PR{ver}']*4
-apply_mc_corr(fnout,fncor,kapName,galNames,prefixs)
 # Use polynomial fits to measured Ckg, Cgg for 
 # the covariance. Update the ckk theory curve.
-cij = np.loadtxt(f'fiducial/cls_LRGxPR4_bestFit.txt').reshape((5,5,3*2048))
+cij  = np.loadtxt(f'fiducial/cls_LRGxPR4_bestFit.txt').reshape((5,5,3*2048))
 ells = np.arange(cij.shape[-1])
 cij[0,0,:] = np.interp(ells,nkk[:,0],nkk[:,2],right=0)
-# now compute the covariance (only for the pairs of interest
-# which correspond to ckgi, cgigi for i = 1,2,3,4)
+# compute power spectra and window functions, save to json file
 pairs = [[0,1],[0,2],[0,3],[0,4],[1,1],[2,2],[3,3],[4,4]]
-full_master(ledges,maps,msks,names,fncor,cij=cij,do_cov=True,pairs=pairs)
+full_master(LEDGES,maps,msks,names,fnout,cij=cij,do_cov=True,pairs=pairs)
+# correct for the lensing normalization using
+# the MC calculations (labeled by prefix), overwrite json file
+prefixs = [f'../mc_correction/sims/LRG_full_z1_PR{ver}']*4
+apply_mc_corr(fnout,fncor,kapName,galNames,prefixs)

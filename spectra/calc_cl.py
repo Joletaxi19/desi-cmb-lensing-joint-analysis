@@ -102,7 +102,7 @@ def cij_poly_approx(data,lmax=3000,expfit=True):
     return result
     
     
-def full_master(ledges, maps, msks, names, fnout, do_cov=False, cij=None,
+def full_master(ledges, maps, msks, names, fnout, lmin=20, lmax=1000, do_cov=False, cij=None,
                 only_auto=False, pairs=None, overwrite=False, overwrite_cov=False):
     """
     Computes power spectra and covariances and saves them in a .json format.
@@ -113,6 +113,8 @@ def full_master(ledges, maps, msks, names, fnout, do_cov=False, cij=None,
     msks     : list of masks in healpix format
     names    : list of strings to identify each map+mask pair with
     fnout    : string, filename of the output, should end with .json
+    lmin     : int, only saves data with ell > lmin
+    lmax     : int, only saves data with ell < lmax
     do_cov   : to compute the covariance or to not?
     cij      : optional (nmaps,nmaps,3*nside) ndarray. The spectra
                used when estimating the covariance matrix. Order of 
@@ -145,6 +147,11 @@ def full_master(ledges, maps, msks, names, fnout, do_cov=False, cij=None,
     bins    = get_bins(ledges,nside)
     ell     = bins.get_effective_ells()
     pixwin  = hp.pixwin(nside)
+    # downselect the ell-bins when saving
+    imin   = np.argwhere(np.array(ell)>lmin)[0][0]
+    imax   = np.argwhere(np.array(ell)<lmax)[-1][0]+1
+    ledges = ledges[imin:imax+1]
+    ell    = ell[imin:imax]
     # load or create outdata
     if exists(fnout) and (not overwrite):
         with open(fnout) as outfile:
@@ -172,8 +179,8 @@ def full_master(ledges, maps, msks, names, fnout, do_cov=False, cij=None,
         if (cl_fname in outdata) and (not overwrite):
             continue
         else:
-            wl = wsps[a].get_bandpower_windows()[0,:,0,:]
-            cl = nmt.compute_full_master(fields[i],fields[j],bins,workspace=wsps[a])[0,:]
+            wl = wsps[a].get_bandpower_windows()[0,imin:imax,0,:]
+            cl = nmt.compute_full_master(fields[i],fields[j],bins,workspace=wsps[a])[0,imin:imax]
             outdata[wl_fname] = wl.tolist()
             outdata[cl_fname] = cl.tolist()
             write_outdata(outdata)   
@@ -198,5 +205,5 @@ def full_master(ledges, maps, msks, names, fnout, do_cov=False, cij=None,
                 cw.compute_coupling_coefficients(fields[i],fields[j],fields[k],fields[l])
                 cov = nmt.gaussian_covariance(cw,0,0,0,0,[cij[i,k]],[cij[i,l]],\
                                              [cij[j,k]],[cij[j,l]],wa=wsps[a],wb=wsps[b])  
-                outdata[cov_fname] = cov.tolist()
+                outdata[cov_fname] = cov[imin:imax,imin:imax].tolist()
                 write_outdata(outdata)

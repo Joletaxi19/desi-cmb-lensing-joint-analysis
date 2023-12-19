@@ -57,7 +57,7 @@ class limb():
       # evaluate dNdz on regular grid and normalize it such 
       # that \int dN/dz dz = 1 for each galaxy sample
       self.dNdz  = np.zeros((self.Nz,self.Ng))
-      for j in range(self.Ng): self.dNdz[:,j] = Spline(dNdz[:,0],dNdz[:,j+1],ext=1)(self.z)
+      for j in range(self.Ng): self.dNdz[:,j] = np.interp(self.z,dNdz[:,0],dNdz[:,j+1],left=0,right=0)
       norm       = simps(self.dNdz, x=self.z, axis=0)     # (Ng) ndarray
       norm       = self.gridMe(norm)
       self.dNdz /= norm

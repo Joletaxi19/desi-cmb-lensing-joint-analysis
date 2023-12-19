@@ -78,7 +78,7 @@ params:
     ref: {dist: norm, loc: 0.0, scale: 1.0}
     latex: b_2(z_1)
   bs_LRGz1: 
-    prior: {min: -5., max: 5.}
+    prior: {dist: norm, loc: 0., scale: 1.}
     ref: {dist: norm, loc: 0.0, scale: 1.0}
     latex: b_s(z_1)
   smag_LRGz1:
@@ -95,7 +95,7 @@ params:
     ref: {dist: norm, loc: 0.0, scale: 1.0}
     latex: b_2(z_2)
   bs_LRGz2: 
-    prior: {min: -5., max: 5.}
+    prior: {dist: norm, loc: 0., scale: 1.}
     ref: {dist: norm, loc: 0.0, scale: 1.0}
     latex: b_s(z_2)
   smag_LRGz2:
@@ -112,7 +112,7 @@ params:
     ref: {dist: norm, loc: 0.0, scale: 1.0}
     latex: b_2(z_3)
   bs_LRGz3: 
-    prior: {min: -5., max: 5.}
+    prior: {dist: norm, loc: 0., scale: 1.}
     ref: {dist: norm, loc: 0.0, scale: 1.0}
     latex: b_s(z_3)
   smag_LRGz3:
@@ -129,13 +129,13 @@ params:
     ref: {dist: norm, loc: 0.0, scale: 1.0}
     latex: b_2(z_4)
   bs_LRGz4: 
-    prior: {min: -5., max: 5.}
+    prior: {dist: norm, loc: 0., scale: 1.}
     ref: {dist: norm, loc: 0.0, scale: 1.0}
     latex: b_s(z_4)
   smag_LRGz4:
     prior: {dist: norm, loc: 0.8, scale: 0.1}
     ref: {dist: norm, loc: 0.8, scale: 0.05}
-    latex: s_{\mu}(z_4)   
+    latex: s_{\mu}(z_4)  
     
 sampler:
   mcmc:

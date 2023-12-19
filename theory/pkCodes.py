@@ -63,7 +63,7 @@ def pggHalofit(thy_args,z):
    k = np.logspace(np.log10(0.005),np.log10(5.),200)
    cosmo = getCosmo(thy_args)
    h = cosmo.h()
-   Pk = lambda zz: np.array([cosmo.pk_cb(kk*h,zz)*h**3 for kk in k])
+   Pk = lambda zz: np.array([cosmo.pk(kk*h,zz)*h**3 for kk in k])
    return np.array([k,thy_args[6]**2*Pk(z)]).T
 
 def pgmHalofit(thy_args,z):
@@ -77,10 +77,24 @@ def pgmHalofit(thy_args,z):
    k = np.logspace(np.log10(0.005),np.log10(5.),200)
    cosmo = getCosmo(thy_args)
    h = cosmo.h()
-   Pk = lambda zz: np.array([cosmo.pk_cb(kk*h,zz)*h**3 for kk in k])
+   Pk = lambda zz: np.array([cosmo.pk(kk*h,zz)*h**3 for kk in k])
    return np.array([k,thy_args[6]*Pk(z)]).T
 
-def pggVelocileptors(thy_args,z,k=None):
+def ptableVelocileptors(thy_args,z,k=None,extrap_min=-5,extrap_max=3):
+   """
+   .........
+   """
+   omb,omc,ns,ln10As,H0,Mnu,b1,b2,bs = thy_args
+   if k is None: k = ks
+   cosmo = getCosmo(thy_args)
+   h     = cosmo.h()
+   klin  = np.logspace(-3,np.log10(20.),4000)
+   plin  = np.array([cosmo.pk_cb_lin(kk*h,z)*h**3 for kk in klin])
+   cleft = CLEFT(klin,plin,cutoff=5.,extrap_min=extrap_min,extrap_max=extrap_max)
+   cleft.make_ptable(kmin=min(k),kmax=max(k),nk=len(k))
+   return cleft.pktable
+
+def pggVelocileptors(thy_args,z,k=None,extrap_min=-5,extrap_max=3):
    """
    Returns a Pgg table with shape (Nk,3).
    The first column is k, while the remaining 
@@ -104,7 +118,7 @@ def pggVelocileptors(thy_args,z,k=None):
    h     = cosmo.h()
    klin  = np.logspace(-3,np.log10(20.),4000)
    plin  = np.array([cosmo.pk_cb_lin(kk*h,z)*h**3 for kk in klin])
-   cleft = CLEFT(klin,plin,cutoff=5.)
+   cleft = CLEFT(klin,plin,cutoff=5.,extrap_min=extrap_min,extrap_max=extrap_max)
    cleft.make_ptable(kmin=min(k),kmax=max(k),nk=len(k))
    kout,za  = cleft.pktable[:,0],cleft.pktable[:,13]   
    res      = np.zeros((len(kout),3))
@@ -223,4 +237,42 @@ def pggHEFT(thy_args,z):
    res[:,0]  = T[:,0]
    res[:,1]  = np.dot(T[:,1:],bterms_gg) # bias-contribution
    res[:,2]  = -0.5 * T[:,0]**2 * T[:,2] # counterterm
+   return res  
+
+def pgmHEFTexpanded(thy_args,z):
+   """
+   columns are
+   k, 1, b1, b2, bs, alphaX
+   """
+   omb,omc,ns,ln10As,H0,Mnu = thy_args
+   T         = ptableHEFT(thy_args,z)
+   res       = np.zeros((T.shape[0],6))
+   res[:,0]  = T[:,0]                    # k
+   res[:,1]  = T[:,2]                    # 1
+   res[:,2]  = T[:,4]                    # b1
+   res[:,3]  = T[:,7]*0.5                # b2
+   res[:,4]  = T[:,11]                   # bs
+   res[:,5]  = -0.5 * T[:,0]**2 * T[:,1] # counterterm
+   return res  
+  
+def pggHEFTexpanded(thy_args,z):
+   """
+   columns are
+   k, 1, b1, b1^2, b2, b2*b1, b2^2, bs, bs*b1, bs*b2, bs^2, alphaA
+   """
+   omb,omc,ns,ln10As,H0,Mnu = thy_args
+   T         = ptableHEFT(thy_args,z)
+   res       = np.zeros((T.shape[0],12))
+   res[:,0]  = T[:,0]                    # k
+   res[:,1]  = T[:,3]                    # 1
+   res[:,2]  = T[:,5]*2.                 # b1
+   res[:,3]  = T[:,6]                    # b1^2
+   res[:,4]  = T[:,8]                    # b2
+   res[:,5]  = T[:,9]                    # b2*b1
+   res[:,6]  = T[:,10]*0.25              # b2^2
+   res[:,7]  = T[:,12]*2.                # bs
+   res[:,8]  = T[:,13]*2.                # bs*b1
+   res[:,9]  = T[:,14]                   # bs*b2
+   res[:,10] = T[:,15]                   # bs^2
+   res[:,11] = -0.5 * T[:,0]**2 * T[:,2] # counterterm
    return res  

@@ -27,6 +27,17 @@ def get_sigma8(omb,omc,ns,As,H0,Mnu,counter=0):
         return get_sigma8(omb,omc,ns,As,H0,Mnu,counter=counter+1)
     return cosmo.sigma8()
 
+def get_OmM_classy(omb,omc,ns,As,H0,Mnu):
+    params = {'output': 'mPk','z_pk': '0.0,1','A_s': 1e-10*np.exp(As),'n_s': ns,'h': H0/100., 
+             'N_ur': 2.0328,'N_ncdm': 1,'m_ncdm': Mnu,'tau_reio': 0.0568,
+             'omega_b': omb,'omega_cdm': omc}
+   
+    cosmo = Class()
+    cosmo.set(params)
+    cosmo.compute()
+    
+    return cosmo.Omega0_m()
+
 """
 def get_OmM(omb,omc,ns,As,H0,Mnu):
     params = {'output': 'mPk','z_pk': '0.0,1','A_s': 1e-10*np.exp(As),'n_s': ns,'h': H0/100., 
