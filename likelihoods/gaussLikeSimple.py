@@ -7,12 +7,11 @@ class gaussLike():
    If no analytic marginalization is requred, then all 
    log-likelihoods are "raw" likelihoods up to a 
    constant. When analytic marginalization over a set of 
-   templates is required, all log-likelihoods correspond 
-   to the ("raw" likelihood) x (the priors of 
-   the template coefficients), up to the same constant.
+   templates (mutiplied by linear coefficients) is required, 
+   all log-likelihoods correspond to the ("raw" likelihood) x 
+   (the priors of the template coefficients), up to a constant.
    """
-
-   def __init__(self, dat, cov, tmp_priors=None):
+   def __init__(self, dat, cov, tmp_priors=None, jeffreys=False):
       """
       Parameters
       ----------
@@ -26,6 +25,9 @@ class gaussLike():
          tmp_priors specifices the Gaussian priors on the coefficients 
          multiplying those templates. tmp_priors[:,0] are the means 
          while tmp_priors[:,1] are the standard deviations.
+      jeffreys: bool, default=False
+         If True, include a partial Jeffrey's prior on the linear
+         parameters.
       """
       
       self.dat        = dat
@@ -33,12 +35,14 @@ class gaussLike():
       self.tmp_priors = tmp_priors
       self.D          = len(dat)
       self.T          = 0
+      self.jeff       = jeffreys
       if tmp_priors is not None:
          self.T       = tmp_priors.shape[0]
 
    def templatePrior(self,tmp_prm):
       """
-      Computes prior for template coefficients
+      Computes (log-)prior for template coefficients
+      up to a constant.
       
       Parameters
       ----------
@@ -48,8 +52,8 @@ class gaussLike():
       if self.T == 0.: return 1.
       delt   = np.array(tmp_prm) - self.tmp_priors[:,0]
       chi2   = np.sum((delt/self.tmp_priors[:,1])**2.)
-      volfac = np.prod(2*np.pi*self.tmp_priors[:,1]**2)**0.5
-      return np.exp(-0.5*chi2) / volfac
+      #volfac = np.prod(2*np.pi*self.tmp_priors[:,1]**2)**0.5 # used to include volume factor
+      return -0.5*chi2 #- np.log(volfac)
 
    def rawLogLike(self, thy, tmp_prm=None):
       """
@@ -80,9 +84,13 @@ class gaussLike():
          monomials = np.array([1.]+list(tmp_prm))
          full_thy  = np.dot(thy, monomials)
       
-      delt  = full_thy - self.dat
-      chi2  = np.dot(delt,np.dot(self.cinv,delt))
-      return -0.5*chi2 + np.log(self.templatePrior(tmp_prm))
+      delt = full_thy - self.dat
+      chi2 = np.dot(delt,np.dot(self.cinv,delt))
+      res  = -0.5*chi2 + self.templatePrior(tmp_prm)
+      if self.jeff:
+         _,M,_ = self.anaHelp(thy)
+         res  -= 0.5*np.log(np.linalg.det(M))
+      return res
 
    def anaHelp(self, thy):
       """
@@ -128,26 +136,26 @@ class gaussLike():
          
       delt,M,V = self.anaHelp(thy)
       
-      prefac  = self.templatePrior(np.zeros(self.T))
+      #prefac  = self.templatePrior(np.zeros(self.T)) # used to include prefactor, but this is just a constant
       chi2    = np.dot(delt,np.dot(self.cinv,delt))
       chi2    = chi2-np.dot(V,np.dot(M,V))
       try:
-        logdetM = 0.5*np.log(np.linalg.det(2*np.pi*M))
+        logdetM = 0.5*np.log(np.linalg.det(M)) # used to be 2*np.pi*M
       except:
         print('Overflow, trying [log det(M) = sum log eigvals] instead')
-        eigvals = np.linalg.eigvalsh(2*np.pi*M)
+        eigvals = np.linalg.eigvalsh(M) # used to be 2*np.pi*M
         if np.any(eigvals<0):
             print('Found negative eigenvalues')
             return np.nan
         logdetM = 0.5*np.sum(np.log(eigvals))
-      res = np.log(prefac) - 0.5*chi2 + logdetM
-
+      #res = prefac - 0.5*chi2 + logdetM
+      res = -0.5*chi2 + logdetM*(not self.jeff)
       return res
    
    def getBestFitTemp(self, thy):
       """
       Computes the best-fit values
-      of the template parameters.
+      of the template (linear) parameters.
       
       Parameters
       ----------
