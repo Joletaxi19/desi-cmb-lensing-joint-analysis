@@ -1,4 +1,3 @@
-# !! EVENTUALLY WANT TO HANDLE MORE THAN ONE CMB LENSING MAP !!
 import numpy as np
 import sys
 import json
@@ -8,14 +7,14 @@ from theory.limber               import limb
 from theory.pkCodes              import pmmHEFT,pgmHEFT,pggHEFT
 from theory.background           import classyBackground
 from likelihoods.gaussLikeSimple import gaussLike
-from likelihoods.pack_data       import pack_cl_wl,pack_cov,pack_dndz
+from likelihoods.pack_data_v2    import pack_cl_wl,pack_cov,pack_dndz
 
 class XcorrLike(Likelihood):
     ## From yaml file
     # .json file input (cl's, window functions and covariances)
     jsonfn:   str
     # name of the CMB lensing map 
-    kapName:  str
+    kapNames: list
     # names of the galaxy samples
     galNames: list
     # redshift distribution filenames (one for each galaxy sample)
@@ -47,12 +46,10 @@ class XcorrLike(Likelihood):
     def initialize(self):
         """Sets up the class."""
         self.nsamp = len(self.galNames) # number of galaxy samples
+        self.nkap  = len(self.kapNames) # number of CMB lensing maps
         # load the data (stack data [including dndz's] and apply scale cuts)
         self.loadData()
         # Fiducial cosmological (and bias) parameters used to compute eff redshifts 
-        # !! MAY WANT TO MODIFY TO BE ABLE TO ADD EFFECTIVE REDSHIFTS IN BY HAND? !!
-        # !! THIS COULD BE USEFUL DOWN THE LINE FOR IMPROVING THE EFFECTIVE       !!
-        # !! REDSHIFT APPROXIMATION                                               !!
         fid_cosmo = [0.022,0.1202,0.9667,3.045,67.27,0.06] # omb,omc,ns,ln(1e10 As),H0,Mnu
         fid_bias  = [0.9,0.,0.]                            # b1, b2, bs
         fid = np.array(fid_cosmo+fid_bias)
@@ -118,7 +115,7 @@ class XcorrLike(Likelihood):
         bs   = pp.get_param('bs_'+suf)
         smag = pp.get_param('smag_'+suf)
         return b1,b2,bs,smag
-
+        
     def compute_full(self):
         """
         Do the full prediction (including [pixel] window functions)
@@ -146,19 +143,22 @@ class XcorrLike(Likelihood):
                 Ckg[:,idx] = Ckg[:,idx]*self.pixwin[:Nkg]
                 Cgg[:,idx] = Cgg[:,idx]*self.pixwin[:Ngg]**2
             # multiply by the "mask window"
-            wx = self.wlx[i][:,:Nkg]  ; wa = self.wla[i][:,:Ngg]
-            Cggkg = np.concatenate((np.dot(wa,Cgg),np.dot(wx,Ckg)))
+            wa     = self.wla[i][:,:Ngg]
+            Cggkgs = np.dot(wa,Cgg)
+            for j in range(self.nkap):
+                wx     = self.wlx[j][i][:,:Nkg]
+                Cggkgs = np.concatenate((Cggkgs,np.dot(wx,Ckg)))
             # stack the data vector
-            Nl,Nmon = Cggkg.shape
+            Nl,Nmon = Cggkgs.shape
             res = np.zeros((Nl,1+(Nmon-1)*self.nsamp))
-            res[:,0] = Cggkg[:,0]
-            res[:,1+i*(Nmon-1):1+(i+1)*(Nmon-1)] = Cggkg[:,1:]
+            res[:,0] = Cggkgs[:,0]
+            res[:,1+i*(Nmon-1):1+(i+1)*(Nmon-1)] = Cggkgs[:,1:]
             full_pred.append(res)
         return np.concatenate(full_pred)
     
     def best_fit_raw(self, i, pixwin=True, return_tables=False):
         """
-        Returns raw theory prediction with linear
+        Returns raw (unbinned) theory prediction with linear
         parameters fixed to their best-fit values.
         """
         omb,omc,ns,As,H0,Mnu = self.get_cosmo_parameters()
