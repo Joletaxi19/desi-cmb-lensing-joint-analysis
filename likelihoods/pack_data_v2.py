@@ -87,16 +87,16 @@ def pack_cl_wl(data, kapNames, galNames, amin, amax, xmin, xmax):
     odata        = np.array([])
     # cl,wla
     for i,galName in enumerate(galNames):
-            wla.append(get_wl(data,galName,galName)[acuts[i],:])
-            cgg   = get_cl(data,galName,galName)[acuts[i]]
-            odata = np.concatenate((odata,cgg))
+        wla.append(get_wl(data,galName,galName)[acuts[i],:])
+        cgg   = get_cl(data,galName,galName)[acuts[i]]
+        odata = np.concatenate((odata,cgg))
         for j,kapName in enumerate(kapNames):
             ckg   = get_cl(data,galName,kapName)[xcuts[j][i]]
             odata = np.concatenate((odata,ckg))
     # wlx 
     for j,kapName in enumerate(kapNames):
         wlx_ = []
-        i,galName in enumerate(galNames): 
+        for i,galName in enumerate(galNames): 
             wlx_.append(get_wl(data,kapName,galName)[xcuts[j][i],:])
         wlx.append(wlx_)  
     

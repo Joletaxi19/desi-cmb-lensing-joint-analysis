@@ -52,8 +52,7 @@ class gaussLike():
       if self.T == 0.: return 1.
       delt   = np.array(tmp_prm) - self.tmp_priors[:,0]
       chi2   = np.sum((delt/self.tmp_priors[:,1])**2.)
-      #volfac = np.prod(2*np.pi*self.tmp_priors[:,1]**2)**0.5 # used to include volume factor
-      return -0.5*chi2 #- np.log(volfac)
+      return -0.5*chi2 
 
    def rawLogLike(self, thy, tmp_prm=None):
       """
@@ -135,20 +134,17 @@ class gaussLike():
          return self.rawLogLike()
          
       delt,M,V = self.anaHelp(thy)
-      
-      #prefac  = self.templatePrior(np.zeros(self.T)) # used to include prefactor, but this is just a constant
-      chi2    = np.dot(delt,np.dot(self.cinv,delt))
-      chi2    = chi2-np.dot(V,np.dot(M,V))
+      chi2     = np.dot(delt,np.dot(self.cinv,delt))
+      chi2     = chi2-np.dot(V,np.dot(M,V))
       try:
-        logdetM = 0.5*np.log(np.linalg.det(M)) # used to be 2*np.pi*M
+        logdetM = 0.5*np.log(np.linalg.det(M))
       except:
         print('Overflow, trying [log det(M) = sum log eigvals] instead')
-        eigvals = np.linalg.eigvalsh(M) # used to be 2*np.pi*M
+        eigvals = np.linalg.eigvalsh(M)
         if np.any(eigvals<0):
             print('Found negative eigenvalues')
             return np.nan
         logdetM = 0.5*np.sum(np.log(eigvals))
-      #res = prefac - 0.5*chi2 + logdetM
       res = -0.5*chi2 + logdetM*(not self.jeff)
       return res
    

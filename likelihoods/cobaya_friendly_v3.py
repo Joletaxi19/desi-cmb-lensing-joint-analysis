@@ -91,8 +91,8 @@ class XcorrLike(Likelihood):
         # load the json file containing cl's, window functions, and covariances
         with open(self.jsonfn) as outfile:
             jsondata = json.load(outfile)
-        self.wla,self.wlx,self.data = pack_cl_wl(jsondata,self.kapName,self.galNames,self.amin,self.amax,self.xmin,self.xmax)
-        self.cov  =                   pack_cov(  jsondata,self.kapName,self.galNames,self.amin,self.amax,self.xmin,self.xmax)
+        self.wla,self.wlx,self.data = pack_cl_wl(jsondata,self.kapNames,self.galNames,self.amin,self.amax,self.xmin,self.xmax)
+        self.cov  =                   pack_cov(  jsondata,self.kapNames,self.galNames,self.amin,self.amax,self.xmin,self.xmax)
         dndzs     = [np.loadtxt(self.dndzfns[i]) for i in range(self.nsamp)]
         self.dndz = pack_dndz(dndzs)
         self.pixwin = np.array(jsondata['pixwin'])
