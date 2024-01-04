@@ -1,10 +1,6 @@
 # Buzzard mocks
 
-Power spectra and window functions: `lrg_s1i_XXX.txt` where `XXX = cls, wla, wlx` and `i=1,2,3,4` for `z = z1,z2,z3,z4`.
-
-Redshift distribution: `combined_dNdz.txt`. First column is redshifts, remaining four are dNdz for `z = z1,z2,z3,z4`.
-
-Covariance for PR4: `lrg_pr4_multi_cov.txt`. Basis is (Cgg1, Ckg1, Cgg2, Ckg2, ... Ckg4) with 20 ell bins (same bins as `*cls.txt`).
+Power spectra and window functions are stored in `.json` files. Redshift distributions are in `dNdzs` (first column is redshift, while the second is `dN`). 
 
 ### Fiducial cosmology
 ```
@@ -22,8 +18,8 @@ sigma8         = 0.82
 
 ### Magnification biases
 
-For each redshift bin: `1.062, 0.973, 0.825, 0.8`
+For each redshift bin: `1.04, 0.97, 0.81, 0.80`
 
 ### Projected shot noise
 
-For each redshift bin: `3.5837e-06, 1.9653e-06, 1.8574e-06, 2.1008e-06`
+For each redshift bin: `3.7786e-06, 1.7858e-06, 1.9084e-06, 2.5209e-06`
