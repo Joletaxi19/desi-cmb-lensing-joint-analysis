@@ -165,6 +165,9 @@ class XcorrLike(Likelihood):
         b1,b2,bs,smag = self.get_nuisance_parameters(i)
         params  = np.array([omb,omc,ns,As,H0,Mnu,b1,b2,bs])
         Cgg,Ckg = self.clPred.computeCggCkg(i,params,smag)
+        if self.chenprior:
+            Cgg[:,1] += Cgg[:,3]/(2.*(1.+b1))
+            Ckg[:,1] += Ckg[:,3]/(2.*(1.+b1))
         Nkg = Ckg.shape[0] ; Ngg = Cgg.shape[0]
         pixwin_idxs = [0,1,3]
         for idx in pixwin_idxs:

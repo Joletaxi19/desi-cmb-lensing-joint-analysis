@@ -57,7 +57,7 @@ def get_ACT_maps(simidx,nside):
     simidx = 1,..,400
     """
     bdir  = '/global/cfs/projectdirs/act/data/gfarren/lensingsims/baseline/'
-    bdir2 = '/pscratch/sd/j/jaejoonk/ACTxDESI/signal_v0.4/'
+    bdir2 = '/pscratch/sd/n/nsailer/ACT_lensing_products/signal_sims/'       #'/pscratch/sd/j/jaejoonk/ACTxDESI/signal_v0.4/'
     
     # get reconstructed map
     kappa_rec_alm = np.nan_to_num(hp.read_alm(bdir+f'all_MV_simlensing_mf-sub_mc-corr_MV_{simidx}.fits'))
