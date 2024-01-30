@@ -60,7 +60,7 @@ def get_sigma8_hacky(omb,omc,ns,As,H0,Mnu):
 ## newer and betterer code  
     
     
-def get_H0(OmMh3, omega_cdm, omega_b, m_ncdm): return 100*np.real(np.roots([m_ncdm/41.844,0,omega_cdm+omega_b,-OmMh3])[-1])
+def get_H0(OmMh3, omega_cdm, omega_b, m_ncdm): return 100*OmMh3/(omega_cdm+omega_b+m_ncdm/93.14)
 
 def get_OmM(OmMh3,H0): return OmMh3/(H0/100)**3
     

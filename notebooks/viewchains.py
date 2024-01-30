@@ -71,9 +71,28 @@ def add_OmM_prior(chain,OmM,sOmM):
     return nchain
 
 
+def get_bestFit_values(fn):
+    fullfn = f'{fn}_minimize.minimum.txt'
+    for line in open(fullfn):
+        li=line.strip()
+        if li.startswith("#"):
+            header = li
+    header = np.array(header.split())[1:].tolist()
+    bf = np.loadtxt(fullfn)
+    return dict(zip(header,bf))
+
+def get_maxima(fns,params):
+    res = np.zeros((len(fns),len(params)))
+    for i,fn in enumerate(fns):
+        bf = get_bestFit_values(fn)
+        res[i,:] = np.array([bf[param] for param in params])
+    return res
+
+
 def make_triangle_plot(samples,legend_labels,params_to_show,truth=None,contour_ls=None,contour_lws=None,contour_colors=None,
                        filled=True,title_x=None,title_y=None,title=None,save_path=None,markers=None,fontsize_title=None,ncol=1,
-                       legend_fontsize=20,add_1d_constraints=True,add_confidence_truth=False,legend_loc='upper right',figsize=8):
+                       legend_fontsize=20,add_1d_constraints=True,add_confidence_truth=False,legend_loc='upper right',figsize=8,
+                       maxima=None):
     # Plot settings
     g = gdplt.get_subplot_plotter()
     g.settings.figure_legend_frame = False
@@ -102,8 +121,6 @@ def make_triangle_plot(samples,legend_labels,params_to_show,truth=None,contour_l
                     line_args=[{'ls': ls, 'lw': lw, 'color': color} for ls, lw, color in zip(contour_ls, contour_lws, contour_colors)])
     if title:
         plt.suptitle(title, fontsize=fontsize_title, x=title_x, y=title_y)
-    if save_path:
-        plt.savefig(save_path, dpi=100)
     if truth:
         g.add_param_markers(dict(zip(params_to_show[:len(truth)],truth)),lw=3,color='k',ls='--' )
         
@@ -112,8 +129,12 @@ def make_triangle_plot(samples,legend_labels,params_to_show,truth=None,contour_l
         for i in range(len(params_to_show)):
             for j,chain in enumerate(samples):
                 s = r'{}'.format('$'+chain.getInlineLatex(params_to_show[i])+'$')
+                if maxima is not None:
+                    s+= ' $'+f'[{maxima[j,i]:0.03f}'+r']'+'$'
                 if add_confidence_truth:
                     sigstar = get_confidence_sigma(chain,params_to_show[i],truth[i])
                     s+= ' $'+f'({sigstar:0.02f}'+r'\sigma)'+'$'
                 g.add_text(s,x=0.025,y=1.+0.13*(Nchains-j),ax=[i,i],color=contour_colors[j],fontsize=15)
+    if save_path:
+        plt.savefig(save_path, dpi=100, bbox_inches='tight')
     plt.show()
