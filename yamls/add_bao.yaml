@@ -1,0 +1,15 @@
+post:
+  add:
+    theory:
+      classy:
+        extra_args: {output: '', N_ur: 2.0328, N_ncdm: 1}
+        input_params: [A_s, omega_cdm, n_s, H0, omega_b, m_ncdm]
+    likelihood:
+      bao.sixdf_2011_bao:
+      bao.sdss_dr7_mgs:
+      bao.sdss_dr12_consensus_bao:
+    params:
+      A_s: "lambda ln1e10As: 1e-10*np.exp(ln1e10As)"
+  suffix: addBAO
+
+output: chains/buzzard_noBAO_linear_pr4
