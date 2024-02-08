@@ -7,13 +7,10 @@
 #SBATCH -q regular
 #SBATCH -C cpu
 #SBATCH -A desi
-#
-date
-source activate cmb
-#
-# Now run the code.
+
+sample=$1
+
+module load evp-patch
+conda activate cobaya
 export OMP_NUM_THREADS=32
-srun -n 32 -c 32 python make_lrg_maps.py 2
-#
-date
-#
+srun -n 32 -c 32 python make_lrg_maps.py ${sample}

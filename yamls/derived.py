@@ -5,61 +5,6 @@ import os
 from time import sleep
 from scipy.interpolate import interp1d
 
-def get_sigma8(omb,omc,ns,As,H0,Mnu,counter=0):
-    params = {'output': 'mPk','A_s': 1e-10*np.exp(As),'n_s': ns,'h': H0/100., 
-             'N_ur': 2.0328,'N_ncdm': 1,'m_ncdm': Mnu,'tau_reio': 0.0568,
-             'omega_b': omb,'omega_cdm': omc}
-    cosmo = Class()
-    cosmo.set(params)
-    try:
-        cosmo.compute()
-    except:
-        if counter > 50:
-            print('Ran CLASS 50 times with params')
-            print('omb =',omb)
-            print('omc =',omc)
-            print('As  =',As)
-            print('ns  =',ns)
-            print('H0  =',H0)
-            print('Mnu =',Mnu)
-            print('and couldnt get a reasonable sigma8 value, returning 0.75')
-            return 0.75
-        return get_sigma8(omb,omc,ns,As,H0,Mnu,counter=counter+1)
-    return cosmo.sigma8()
-
-def get_OmM_classy(omb,omc,ns,As,H0,Mnu):
-    params = {'output': 'mPk','z_pk': '0.0,1','A_s': 1e-10*np.exp(As),'n_s': ns,'h': H0/100., 
-             'N_ur': 2.0328,'N_ncdm': 1,'m_ncdm': Mnu,'tau_reio': 0.0568,
-             'omega_b': omb,'omega_cdm': omc}
-   
-    cosmo = Class()
-    cosmo.set(params)
-    cosmo.compute()
-    
-    return cosmo.Omega0_m()
-
-"""
-def get_OmM(omb,omc,ns,As,H0,Mnu):
-    params = {'output': 'mPk','z_pk': '0.0,1','A_s': 1e-10*np.exp(As),'n_s': ns,'h': H0/100., 
-             'N_ur': 2.0328,'N_ncdm': 1,'m_ncdm': Mnu,'tau_reio': 0.0568,
-             'omega_b': omb,'omega_cdm': omc}
-   
-    cosmo = Class()
-    cosmo.set(params)
-    cosmo.compute()
-    
-    return cosmo.Omega0_m()
-
-def get_sigma8_hacky(omb,omc,ns,As,H0,Mnu):
-    pmm = pmmHEFT(np.array([omb,omc,ns,As,H0,Mnu]),np.array([0.]))
-    k = pmm[:,0]
-    p = pmm[:,1]
-    s8_proxy = simps((3*jn(1,8*k)/(8*k))**2*k**2*p/2/np.pi**2, x=k)**0.5
-"""    
-    
-## newer and betterer code  
-    
-    
 def get_H0(OmMh3, omega_cdm, omega_b, m_ncdm): return 100*OmMh3/(omega_cdm+omega_b+m_ncdm/93.14)
 
 def get_OmM(OmMh3,H0): return OmMh3/(H0/100)**3
@@ -95,4 +40,3 @@ def get_sigma8_emu(omega_b,omega_cdm,n_s,ln1e10As,OmMh3,m_ncdm):
     dat = np.loadtxt(fname)
     sigma8_interp = interp1d(dat[:,0],dat[:,1],kind='cubic')
     return sigma8_interp(omega_cdm) * (np.exp(ln1e10As)/np.exp(ln1e10As_fid))**0.5 
-    

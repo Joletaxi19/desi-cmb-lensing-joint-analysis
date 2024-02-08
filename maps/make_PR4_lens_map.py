@@ -54,20 +54,13 @@ if lowpass:
             fout.write("{:8.0f} {:15.5e} {:15.5e}\n".\
                        format(pl_nkk[i,0],pl_nkk[i,1],pl_nkk[i,2]))
 # rotate from galactic to celestial coordinates
-pl_kappa = hp.alm2map(pl_klm,Nside)
 rot      = hp.rotator.Rotator(coord=f'g{COORD}')
-pl_kappa = rot.rotate_map_pixel(pl_kappa)
-pl_mask  = rot.rotate_map_pixel(pl_mask)
-#
-apos    = 0.5  # deg.
-print("Apodizing the mask by {:.2f} deg.".format(apos))
-pl_mask_apod = nmt.mask_apodization(pl_mask,apos,apotype="C2")
-# Now write the processed maps.
-if lowpass:
-    outfn= 'PR4_lens_kap_filt.hpx{:04d}.fits'.format(Nside)
-else:
-    outfn= 'PR4_lens_kap.hpx{:04d}.fits'.format(Nside)
+# kappa map
+pl_kappa = hp.alm2map(rot.rotate_alm(pl_klm),Nside)
+if lowpass: outfn= 'PR4_lens_kap_filt.hpx{:04d}.fits'.format(Nside)
+else: outfn= 'PR4_lens_kap.hpx{:04d}.fits'.format(Nside)
 hp.write_map(outfn,pl_kappa,dtype='f4',coord='C',overwrite=True)
-outfn    = 'masks/PR4_lens_mask.fits'
-hp.write_map(outfn,hp.ud_grade(pl_mask_apod,Nside),dtype='f4',\
-             coord='C',overwrite=True)
+# mask
+pl_mask_apod = rot.rotate_map_alms(nmt.mask_apodization(pl_mask,0.5,apotype="C2"))
+outfn        = 'masks/PR4_lens_mask.fits'
+hp.write_map(outfn,hp.ud_grade(pl_mask_apod,Nside),dtype='f4',coord='C',overwrite=True)

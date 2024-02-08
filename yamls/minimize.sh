@@ -10,10 +10,15 @@
 
 name=$1
 
-date
 module load evp-patch
 conda activate cobaya
-export OMP_NUM_THREADS=32
-srun -n 1 -c 32 python minimize.py ${name}
-srun -n 1 -c 32 cobaya-run --minimize --force ${name}_minimize.yaml
-srun -n 1 -c 32 rm ${name}_minimize.yaml
+export OMP_NUM_THREADS=2
+srun -n 1  -c 2 python minimize.py ${name}
+if [[ ${name} == chains/* ]]
+then
+    srun -n 64 -c 2 cobaya-run --minimize --force ${name:7}_minimize.yaml
+    srun -n 1  -c 2 rm ${name:7}_minimize.yaml
+else
+    srun -n 64 -c 2 cobaya-run --minimize --force ${name}_minimize.yaml
+    srun -n 1  -c 2 rm ${name}_minimize.yaml
+fi

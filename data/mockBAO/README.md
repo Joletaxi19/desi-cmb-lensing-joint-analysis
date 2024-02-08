@@ -1,4 +1,4 @@
-Mock BAO datasets for 6dF and SDSS DR7 & DR12, written in a cobaya-friendly format. The mock data (`.dat` files) are calculated assuming a Buzzard cosmology (below), and do not include any scatter.  
+Mock BAO datasets for 6dF and SDSS DR7 & DR12, written in a cobaya-friendly format. The mock data (`.dat` files) are calculated assuming a Buzzard cosmology (below), and do not include any scatter. I assume `rs_fid = 147.78` for all of the mock data. See `yamls/add_mock_bao.yaml` as an example for post-processing. 
 
 Buzzard cosmology:
 ```

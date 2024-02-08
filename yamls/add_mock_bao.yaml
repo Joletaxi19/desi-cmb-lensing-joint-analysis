@@ -19,4 +19,4 @@ post:
       A_s: "lambda ln1e10As: 1e-10*np.exp(ln1e10As)"
   suffix: addMockBAO
 
-output: chains/buzzard_noBAO_pr4
+output:

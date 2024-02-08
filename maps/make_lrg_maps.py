@@ -14,6 +14,10 @@ import sys
 sys.path.append('../')
 from globe import NSIDE,COORD
 
+bdir = '/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/imaging_weights/main_lrg/'
+fiducial_weights_path = bdir+'main_lrg_linear_coeffs_pz.yaml'
+noebv_weights_path    = bdir+'main_lrg_linear_coeffs_pz_no_ebv.yaml'
+
 from mpi4py import MPI
 comm = MPI.COMM_WORLD
 rank = comm.Get_rank()
@@ -25,7 +29,7 @@ def toMag(depth,ext,ebv):
     mag= -2.5*(np.log10(5/dd)-9) - ext*ebv
     return(mag)
 
-def make_lrg_map(isamp,ebv_cut=0.15,star_cut=2500.):
+def make_lrg_map(isamp,ebv_cut=0.15,star_cut=2500.,weights_path=noebv_weights_path):
     # Set up the pz_bin based on isamp.
     pz_bin = isamp%10
     # Write a log file, to get around annoying buffering issues
@@ -183,10 +187,7 @@ def make_lrg_map(isamp,ebv_cut=0.15,star_cut=2500.):
         tt['psfdepth_w1mag_ebv']= toMag(tt['PSFDEPTH_W1'],0.184,tt['EBV'])
         tt['psfdepth_w2mag_ebv']= toMag(tt['PSFDEPTH_W2'],0.113,tt['EBV'])
         # Now weight the randoms (or not).
-        if True:
-            weights_path = '/global/cfs/cdirs/desi/users/rongpu/data'
-            weights_path+= '/lrg_xcorr/imaging_weights/main_lrg'
-            weights_path+= '/main_lrg_linear_coeffs_pz.yaml'
+        if weights_path is not None:
             wt = get_randoms_weights(tt,weights_path,pz_bin)
             if i==0: # which should be rank 0.
                 flog.write("Using weights from "+\
@@ -226,19 +227,12 @@ def make_lrg_map(isamp,ebv_cut=0.15,star_cut=2500.):
         # have lots of small holes that give ringing.
         msk  = np.nonzero(rmap>0.20*avg)[0]
         #
-        print("Have {:e} total galaxies in masked region.".\
-               format(np.sum(dmap[msk])))
-        print("Have {:8.2f} galaxies per masked pixel.".\
-                format(np.mean(dmap[msk])))
-        print("Have {:8.2f} randoms  per masked pixel.".\
-                format(np.mean(wtot[msk])))
-        #
-        flog.write("Have {:e} total galaxies in masked region.\n".\
-               format(np.sum(dmap[msk])))
-        flog.write("Have {:8.2f} galaxies per masked pixel.\n".\
-               format(np.mean(dmap[msk])))
-        flog.write("Have {:8.2f} randoms  per masked pixel.\n".\
-               format(np.mean(wtot[msk])))
+        print("Have {:e} total galaxies in masked region.".format(np.sum(dmap[msk])))
+        print("Have {:8.2f} galaxies per masked pixel.".format(np.mean(dmap[msk])))
+        print("Have {:8.2f} randoms  per masked pixel.".format(np.mean(wtot[msk])))
+        flog.write("Have {:e} total galaxies in masked region.\n".format(np.sum(dmap[msk])))
+        flog.write("Have {:8.2f} galaxies per masked pixel.\n".format(np.mean(dmap[msk])))
+        flog.write("Have {:8.2f} randoms  per masked pixel.\n".format(np.mean(wtot[msk])))
         # Now fill in the masked region.
         omap      = np.zeros(npix,dtype='f8')
         omap[msk] = dmap[msk]/rmap[msk]
@@ -266,7 +260,7 @@ def make_lrg_map(isamp,ebv_cut=0.15,star_cut=2500.):
         # Write the basic maps we always want.
         for outnside in [NSIDE]:
             pref = "lrg_s{:02d}".format(isamp)
-            hpex = ".hpx{:04d}.fits".format(outnside)
+            hpex = ".hpx{:04d}_noebv.fits".format(outnside)
             nmap = hp.ud_grade(omap,outnside)
             hp.write_map(pref+"_del"+hpex,nmap,dtype='f4',\
                      nest=isnest,coord='G',overwrite=True)
