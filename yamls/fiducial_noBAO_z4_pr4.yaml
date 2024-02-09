@@ -1,0 +1,104 @@
+likelihood:
+  # Cgg and Ckg
+  cobaya_friendly_v3.XcorrLike:
+    python_path: /pscratch/sd/n/nsailer/MaPar/likelihoods/
+    # json file contains cls, window functions and covariance
+    jsonfn:   /pscratch/sd/n/nsailer/MaPar/spectra/lrg_cross_pr4+dr6_joshua.json
+    # name of the CMB lensing map (in json file)
+    kapNames: [PR4]
+    # names of the galaxy samples (in json file)
+    galNames: [LRGz4]
+    # redshift distribution filenames (one for each galaxy sample)
+    dndzfns:
+    - /pscratch/sd/n/nsailer/MaPar/data/dNdzs/LRGz4_dNdz.txt
+    # scale cuts
+    amin: [79]
+    amax: [600]
+    xmin: [[20]]
+    xmax: [[600]]
+    # fiducial shot noise
+    fidSN: [2.25e-6]
+    # prior on shot noise (sigma = fidSN*snfrac)
+    snfrac:  0.3
+    # fiducial alpha_auto and priors
+    fida0:  [0.]
+    a0prior: [50.]
+    # fiducial alpha_cross and priors (actually epsilon is chenprior=True)
+    fidaX:  [0.]
+    aXprior: [2.]
+    # Chen prior
+    # when this is true alpha_x = alpha_0/(2*b^E_1) + epsilon
+    # and the fidaX, aXprior are the fiducial values and priors
+    # on epsilon (rather than alphaX)
+    chenprior: True
+    # jeffreys prior on linear parameters
+    jeffreys: False
+    # maximize or sample?
+    maximize:  False
+    stop_at_error: True
+    
+params:
+## cosmological parameters
+# fixed  
+  n_s: 0.9649
+  omega_b: 0.02236
+  OmMh3: 0.09633
+  m_ncdm: 0.06
+# sampled
+  ln1e10As:
+    prior: {min: 2., max: 4.}
+    ref: {dist: norm, loc: 3.065, scale: 0.03}
+    latex: \ln(10^{10}A_s)
+  omega_cdm:
+    prior: {min: 0.08, max: 0.16}
+    ref: {dist: norm, loc: 0.1176, scale: 0.01}
+    latex: \omega_c
+# derived inputs to XcorrLike and or CLASS
+  H0: "import_module('derived').get_H0"
+# other derived parameters of interest
+  OmM: 
+    derived: "import_module('derived').get_OmM"
+    latex: \Omega_m
+  sigma8:
+    derived: "import_module('derived').get_sigma8_emu"
+    latex: \sigma_8
+  S8:
+    derived: "lambda OmM,sigma8: sigma8*(OmM/0.3)**0.5"
+    latex: S_8
+  S8x:
+    derived: "lambda OmM,sigma8: sigma8*(OmM/0.3)**0.4"
+    latex: S^X_8
+    
+# nuisance parameters
+# z4
+  b1_LRGz4:
+    prior: {min: 0., max: 3.}
+    ref: {dist: norm, loc: 1.25, scale: 0.05}
+    latex: b_1(z_4)
+  b2_LRGz4:
+    prior: {min: -5., max: 5.}
+    ref: {dist: norm, loc: 0.0, scale: 1.0}
+    latex: b_2(z_4)
+  bs_LRGz4: 
+    prior: {dist: norm, loc: 0., scale: 1.}
+    ref: {dist: norm, loc: 0.0, scale: 1.0}
+    latex: b_s(z_4)
+  smag_LRGz4:
+    prior: {dist: norm, loc: 0.988, scale: 0.1}
+    ref: {dist: norm, loc: 0.988, scale: 0.05}
+    latex: s_{\mu}(z_4)   
+    
+sampler:
+  mcmc:
+    learn_proposal: True
+    learn_proposal_Rminus1_max: 10.
+    output_every: 60s
+    measure_speeds: false
+    max_tries: 500
+    drag: False
+    proposal_scale: 1.5
+    Rminus1_stop: 0.01
+    
+output: chains/fiducial_noBAO_z4_pr4
+timing: True
+stop_on_error: True
