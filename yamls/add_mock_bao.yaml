@@ -7,13 +7,13 @@ post:
     likelihood:
       sixdf_sdss_dr7:
         class: bao.generic
-        measurements_file: /pscratch/sd/n/nsailer/MaPar/data/mockBAO/sixdf_sdss-dr7_bao.dat
-        cov_file: /pscratch/sd/n/nsailer/MaPar/data/mockBAO/sixdf_sdss-dr7_bao.cov
+        measurements_file: /pscratch/sd/n/nsailer/MaPar/mocks/mockBAO/sixdf_sdss-dr7_bao.dat
+        cov_file: /pscratch/sd/n/nsailer/MaPar/mocks/mockBAO/sixdf_sdss-dr7_bao.cov
         rs_fid: 147.78
       sdss_d12:
         class: bao.generic
-        measurements_file: /pscratch/sd/n/nsailer/MaPar/data/mockBAO/sdss_DR12Consensus_bao.dat
-        cov_file: /pscratch/sd/n/nsailer/MaPar/data/mockBAO/sdss_DR12Consensus_bao.cov
+        measurements_file: /pscratch/sd/n/nsailer/MaPar/mocks/mockBAO/sdss_DR12Consensus_bao.dat
+        cov_file: /pscratch/sd/n/nsailer/MaPar/mocks/mockBAO/sdss_DR12Consensus_bao.cov
         rs_fid: 147.78
     params:
       A_s: "lambda ln1e10As: 1e-10*np.exp(ln1e10As)"

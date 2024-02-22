@@ -66,6 +66,7 @@ class XcorrLike(Likelihood):
             return [[a0,a0p],[SN,SNp],[aX,aXp]]
         tmp_priors = template_priors(0)
         for i in range(1,self.nsamp): tmp_priors += template_priors(i)
+        self.tmp_priors = tmp_priors
         print('Using template priors =',tmp_priors)
         self.glk = gaussLike(self.data, self.cov, tmp_priors=np.array(tmp_priors), jeffreys=self.jeffreys)
         

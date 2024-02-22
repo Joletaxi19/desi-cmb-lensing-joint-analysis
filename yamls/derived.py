@@ -40,3 +40,13 @@ def get_sigma8_emu(omega_b,omega_cdm,n_s,ln1e10As,OmMh3,m_ncdm):
     dat = np.loadtxt(fname)
     sigma8_interp = interp1d(dat[:,0],dat[:,1],kind='cubic')
     return sigma8_interp(omega_cdm) * (np.exp(ln1e10As)/np.exp(ln1e10As_fid))**0.5 
+
+# Dumb parameter redefinitions 
+def get_sigma8_emu_z1(omega_b,omega_cdm,n_s,ln1e10As_LRGz1,OmMh3,m_ncdm):
+    return get_sigma8_emu(omega_b,omega_cdm,n_s,ln1e10As_LRGz1,OmMh3,m_ncdm)
+def get_sigma8_emu_z2(omega_b,omega_cdm,n_s,ln1e10As_LRGz2,OmMh3,m_ncdm):
+    return get_sigma8_emu(omega_b,omega_cdm,n_s,ln1e10As_LRGz2,OmMh3,m_ncdm)
+def get_sigma8_emu_z3(omega_b,omega_cdm,n_s,ln1e10As_LRGz3,OmMh3,m_ncdm):
+    return get_sigma8_emu(omega_b,omega_cdm,n_s,ln1e10As_LRGz3,OmMh3,m_ncdm)
+def get_sigma8_emu_z4(omega_b,omega_cdm,n_s,ln1e10As_LRGz4,OmMh3,m_ncdm):
+    return get_sigma8_emu(omega_b,omega_cdm,n_s,ln1e10As_LRGz4,OmMh3,m_ncdm)

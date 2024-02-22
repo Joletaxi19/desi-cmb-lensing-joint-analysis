@@ -1,6 +1,10 @@
-# MaPar
+[![](https://img.shields.io/badge/arXiv-2106.09713%20-red.svg)](https://arxiv.org/abs/24MM.XXXXX)
 
-A general framework to go from Maps to Parameters.
+# Maps to Parameters
+
+Code used for the cross-correlation analysis of DESI Luminous Red Galaxies with CMB lensing from Planck (PR3 and PR4) and ACT DR6.
+- making the angular power spectrum measurements: `spectra`
+- the likelihood: `likelihood/`,`theory/`,`yamls/`
 
 # Installation
 

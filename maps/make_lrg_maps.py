@@ -29,7 +29,7 @@ def toMag(depth,ext,ebv):
     mag= -2.5*(np.log10(5/dd)-9) - ext*ebv
     return(mag)
 
-def make_lrg_map(isamp,ebv_cut=0.15,star_cut=2500.,weights_path=noebv_weights_path):
+def make_lrg_map(isamp,ebv_cut=0.15,star_cut=2500.,weights_path=None):
     # Set up the pz_bin based on isamp.
     pz_bin = isamp%10
     # Write a log file, to get around annoying buffering issues
@@ -260,7 +260,7 @@ def make_lrg_map(isamp,ebv_cut=0.15,star_cut=2500.,weights_path=noebv_weights_pa
         # Write the basic maps we always want.
         for outnside in [NSIDE]:
             pref = "lrg_s{:02d}".format(isamp)
-            hpex = ".hpx{:04d}_noebv.fits".format(outnside)
+            hpex = ".hpx{:04d}_nowghts.fits".format(outnside)
             nmap = hp.ud_grade(omap,outnside)
             hp.write_map(pref+"_del"+hpex,nmap,dtype='f4',\
                      nest=isnest,coord='G',overwrite=True)
