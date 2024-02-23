@@ -70,7 +70,6 @@ def add_OmM_prior(chain,OmM,sOmM):
     nchain.weights *= np.exp(-(ommsmp-OmM)**2/2/sOmM**2)
     return nchain
 
-
 def get_bestFit_values(fn):
     fullfn = f'{fn}_minimize.minimum.txt'
     for line in open(fullfn):

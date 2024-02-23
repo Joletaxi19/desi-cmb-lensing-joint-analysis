@@ -191,3 +191,36 @@ class gaussLike():
       tmp_prm_star = self.getBestFitTemp(thy)
       monomials = np.array([1.]+list(tmp_prm_star))
       return np.dot(thy,monomials)
+
+   def margchi2(self, thy):
+      """
+      Returns the (data) chi2 averaged over linear parameters.
+      
+      Parameters
+      ----------
+      thy: ndarray
+         theory prediction tables
+      """
+      A = thy[:,0]
+      B = thy[:,1:]
+      delt,M,V = self.anaHelp(thy)
+      X = np.array([np.dot(B[:,i],np.dot(self.cinv,delt)) for i in range(self.T)]) 
+      Y = np.dot(M,V)
+      Z = np.matmul(B.T,np.matmul(self.cinv,B))  
+      W = M + np.outer(Y,Y)  
+      chi2 = np.dot(np.dot(delt,self.cinv),delt)
+      chi2-= 2*np.dot(X,Y)
+      chi2+= np.trace(np.matmul(Z,W))
+      return chi2
+    
+   def bfchi2(self, thy):
+      """
+      Returns the (data) chi2 for the best-fit linear parameters.
+      
+      Parameters
+      ----------
+      thy: ndarray
+         theory prediction tables
+      """
+      d = self.getBestFit(thy) - self.dat
+      return np.dot(np.dot(d,self.cinv),d)
