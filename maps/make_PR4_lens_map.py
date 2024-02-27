@@ -64,3 +64,8 @@ hp.write_map(outfn,pl_kappa,dtype='f4',coord='C',overwrite=True)
 pl_mask_apod = rot.rotate_map_alms(nmt.mask_apodization(pl_mask,0.5,apotype="C2"))
 outfn        = 'masks/PR4_lens_mask.fits'
 hp.write_map(outfn,hp.ud_grade(pl_mask_apod,Nside),dtype='f4',coord='C',overwrite=True)
+
+# alternative mask
+pl_mask_apod = nmt.mask_apodization(rot.rotate_map_pixel(pl_mask),0.5,apotype="C2")
+outfn        = 'masks/PR4_lens_mask_alt.fits'
+hp.write_map(outfn,hp.ud_grade(pl_mask_apod,Nside),dtype='f4',coord='C',overwrite=True)

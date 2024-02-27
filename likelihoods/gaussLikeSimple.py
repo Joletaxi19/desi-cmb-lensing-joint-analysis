@@ -1,4 +1,8 @@
 import numpy as np
+from   numpy.random import multivariate_normal as normal
+from   scipy.stats  import chi2                as CHI2
+
+pte = lambda chi2,dof: 1.-CHI2.cdf(chi2,df=dof)
 
 class gaussLike():
    """
@@ -224,3 +228,30 @@ class gaussLike():
       """
       d = self.getBestFit(thy) - self.dat
       return np.dot(np.dot(d,self.cinv),d)
+    
+   def marg_chi2_pte(self, thy, Ndraw=100):
+      """
+      Returns the chi2 and PTE averaged over linear parameters.
+      
+      Parameters
+      ----------
+      thy: ndarray
+         theory prediction tables
+      Ndraw: int
+         number of (Monte-Carlo) integration points
+         used for the linear parameters
+      """
+      delt,M,V = self.anaHelp(thy)
+      def get_random_chi2_pte():
+         # rescaling the template parameters by their standard deviations
+         # improves the convergence of the Monte-Carlo integration
+         # (I think numpy isn't very good at making Gaussian draws when 
+         #  there is a large dynamic range in the Gaussian variables)
+         # I checked this by comparing the Monte-Carlo integration of the average chi2
+         # with the analytic calculation (margchi2)
+         rescale = np.diag(M)**0.5
+         tmp_prm = normal(-1.*np.dot(M,V)/rescale,M/np.outer(rescale,rescale))*rescale
+         delt    = np.dot(thy,np.array([1.]+list(tmp_prm))) - self.dat
+         chi2    = np.dot(np.dot(delt,self.cinv),delt)
+         return [chi2,pte(chi2,self.D)]
+      return np.mean([get_random_chi2_pte() for i in range(Ndraw)],axis=0)

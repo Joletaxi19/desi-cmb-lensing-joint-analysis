@@ -5,8 +5,9 @@ from os.path import exists
 import healpy as hp
 from healpy.rotator import Rotator
 from mpi4py import MPI
-from lensing_sims import get_kappa_maps
 from glob import glob
+
+from lensing_sims import get_kappa_maps
 
 comm  = MPI.COMM_WORLD
 rank  = comm.Get_rank()

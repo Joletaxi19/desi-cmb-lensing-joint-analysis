@@ -2,7 +2,8 @@
 # get_kappa_maps is a "catch all" for PR3/PR4/DR6
 
 # PR3 input maps were downloaded from the PLA, should remove my local directory
-# and make a script to download these inputs
+# and make a script to download these inputs. PR3 reconstruction maps have 
+# moved as of Feb 23 2024 (ffp10/lensing no longer exists)
 
 # Planck PR3/PR4 simulations are in galactic coords
 # ACT DR6 simulations are in celestial coords
@@ -17,7 +18,7 @@ def get_PR3_maps(simidx,nside):
     simidx = 0,...,299
     '''
     # get reconstructed map
-    bdir = '/global/cfs/cdirs/cmb/data/planck2018/ffp10/lensing/MV/'
+    bdir = 'COM_Lensing-SimMap_4096_R3.00/MV/'
     fname = bdir + 'sim_klm_%03d.fits'%simidx
     kappa_sim_alm = np.nan_to_num(hp.read_alm(fname))
     kap_recon = hp.alm2map(kappa_sim_alm,nside)
