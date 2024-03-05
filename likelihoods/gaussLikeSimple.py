@@ -198,7 +198,7 @@ class gaussLike():
 
    def margchi2(self, thy):
       """
-      Returns the (data) chi2 averaged over linear parameters.
+      Returns the (data) chi2 averaged over linear parameters (analytically).
       
       Parameters
       ----------
@@ -229,9 +229,11 @@ class gaussLike():
       d = self.getBestFit(thy) - self.dat
       return np.dot(np.dot(d,self.cinv),d)
     
-   def marg_chi2_pte(self, thy, Ndraw=100):
+   def get_random_tmp_prm(self, thy, Ndraw):
       """
-      Returns the chi2 and PTE averaged over linear parameters.
+      Returns list (len = Ndraw) of linear ("template") paramaters 
+      that are randomly drawn from the appropriate Gaussian
+      distribution
       
       Parameters
       ----------
@@ -242,16 +244,33 @@ class gaussLike():
          used for the linear parameters
       """
       delt,M,V = self.anaHelp(thy)
-      def get_random_chi2_pte():
+      rescale  = np.diag(M)**0.5
+      def get_random_draw():
          # rescaling the template parameters by their standard deviations
          # improves the convergence of the Monte-Carlo integration
          # (I think numpy isn't very good at making Gaussian draws when 
          #  there is a large dynamic range in the Gaussian variables)
          # I checked this by comparing the Monte-Carlo integration of the average chi2
          # with the analytic calculation (margchi2)
-         rescale = np.diag(M)**0.5
-         tmp_prm = normal(-1.*np.dot(M,V)/rescale,M/np.outer(rescale,rescale))*rescale
-         delt    = np.dot(thy,np.array([1.]+list(tmp_prm))) - self.dat
-         chi2    = np.dot(np.dot(delt,self.cinv),delt)
-         return [chi2,pte(chi2,self.D)]
-      return np.mean([get_random_chi2_pte() for i in range(Ndraw)],axis=0)
+         return normal(-1.*np.dot(M,V)/rescale,M/np.outer(rescale,rescale))*rescale
+      return [get_random_draw() for i in range(Ndraw)]
+        
+   def marg_chi2_pte(self, thy, Ndraw=100):
+      """
+      Returns the chi2 and PTE averaged over linear parameters (using MC integration).
+      
+      Parameters
+      ----------
+      thy: ndarray
+         theory prediction tables
+      Ndraw: int
+         number of (Monte-Carlo) integration points
+         used for the linear parameters
+      """
+      random_tmp_prms = self.get_random_tmp_prm(thy, Ndraw=Ndraw)
+      res = []
+      for tmp_prm in random_tmp_prms:
+         delt = np.dot(thy,np.array([1.]+list(tmp_prm))) - self.dat
+         chi2 = np.dot(np.dot(delt,self.cinv),delt)
+         res.append([chi2,pte(chi2,self.D)])
+      return np.mean(res,axis=0)

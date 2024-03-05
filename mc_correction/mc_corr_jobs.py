@@ -15,6 +15,8 @@ decals   = hp.read_map('../maps/masks/decals_mask.fits')
 PR3mask  = hp.read_map(f'../maps/masks/PR3_lens_mask.fits')
 PR4mask  = hp.read_map(f'../maps/masks/PR4_lens_mask.fits')
 PR4maska = hp.read_map(f'../maps/masks/PR4_lens_mask_alt.fits')
+DECm15   = hp.read_map('../maps/masks/DECm15_mask.fits')
+DECp15   = 1 - DECm15
 
 # baseline LRG mask ("full") correlated with act dr6
 def do_dr6(lrg_mask,lrg_name,option='baseline'):
@@ -45,3 +47,4 @@ if job==14: make_mc_cls(f'lrg-full-z{isamp}'  ,lrg_mask,       PR4mask,'c',lensm
 if job==15: make_mc_cls(f'lrg-north-z{isamp}' ,lrg_mask*north, PR4mask,'c',lensmap='PR4')
 if job==16: make_mc_cls(f'lrg-decals-z{isamp}',lrg_mask*decals,PR4mask,'c',lensmap='PR4')
 if job==17: make_mc_cls(f'lrg-des-z{isamp}'   ,lrg_mask*des,   PR4mask,'c',lensmap='PR4')
+if job==18: make_mc_cls(f'lrg-DECp15-z{isamp}',lrg_mask*DECp15,PR4mask,'c',lensmap='PR4')

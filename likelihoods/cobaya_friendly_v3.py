@@ -2,6 +2,7 @@ import numpy as np
 import sys
 import json
 from cobaya.likelihood import Likelihood
+from scipy.interpolate import interp1d
 sys.path.append('../')
 from theory.limber               import limb 
 from theory.pkCodes              import pmmHEFT,pgmHEFT,pggHEFT
@@ -188,3 +189,25 @@ class XcorrLike(Likelihood):
         parameters fixed to their best-fit values.
         """
         return self.glk.getBestFit(self.compute_full())
+    
+    def interpolate_Cgigj(self,I,J,alpha_a,alpha_x,fill_value='extrapolate'):
+        """
+        Interpolates the galaxy cross-spectra given some fiducial evolution
+        for the counterterms.
+        I      : int
+        J      : int
+        alpha_a: (nsamp) ndarray, the auto counterterm evaluated at each eff z
+        alpha_x: (nsamp) ndarray, the cross counterterm evaluated at each eff z
+        """
+        omb,omc,ns,As,H0,Mnu = self.get_cosmo_parameters()
+        nuisance  = np.array([list(self.get_nuisance_parameters(i)) for i in range(self.nsamp)])
+        b1_interp = interp1d(self.clPred.zeff,nuisance[:,0],bounds_error=False,fill_value=fill_value)
+        b2_interp = interp1d(self.clPred.zeff,nuisance[:,1],bounds_error=False,fill_value=fill_value)
+        bs_interp = interp1d(self.clPred.zeff,nuisance[:,2],bounds_error=False,fill_value=fill_value)
+        sm_interp = interp1d(self.clPred.zeff,nuisance[:,3],bounds_error=False,fill_value=fill_value)
+        aa_interp = interp1d(self.clPred.zeff,alpha_a,      bounds_error=False,fill_value=fill_value)
+        ax_interp = interp1d(self.clPred.zeff,alpha_x,      bounds_error=False,fill_value=fill_value)
+        mon_auto  = lambda z: np.array([aa_interp(z)])
+        mon_cros  = lambda z: np.array([ax_interp(z)])
+        thy_args  = lambda z: np.array([omb,omc,ns,As,H0,Mnu,b1_interp(z),b2_interp(z),bs_interp(z)])
+        return self.clPred.computeCgigjZevolution(I,J,thy_args,mon_auto,mon_cros,sm_interp,ext=3)

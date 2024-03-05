@@ -11,7 +11,7 @@ def get_OmM(OmMh3,H0): return OmMh3/(H0/100)**3
     
 def get_sigma8_classy(omega_b,omega_cdm,n_s,ln1e10As,OmMh3,m_ncdm):
     H0 = get_H0(OmMh3, omega_cdm, omega_b, m_ncdm)
-    params = {'output': 'mPk','z_pk': '0.0,20','A_s': 1e-10*np.exp(ln1e10As),'n_s': n_s,'h': H0/100., 
+    params = {'output': 'mPk','P_k_max_h/Mpc':5.,'z_pk': '0.0,20','A_s': 1e-10*np.exp(ln1e10As),'n_s': n_s,'h': H0/100., 
              'N_ur': 2.0328,'N_ncdm': 1,'m_ncdm': m_ncdm,'tau_reio': 0.0568,
              'omega_b': omega_b,'omega_cdm': omega_cdm}
     cosmo = Class()
