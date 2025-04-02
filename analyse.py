@@ -55,14 +55,10 @@ ells_eff = binning.get_effective_ells()
 
 # Affichage avec échelle linéaire en x et logarithmique en y
 plt.figure(figsize=(8, 5))
-plt.semilogy(ells_eff, cl_decoupled[0], 'o-', label=r'$C_\ell^{\kappa\kappa}$')
+plt.semilogy(ells_eff, np.abs(cl_decoupled[0]), 'o-', label=r'$C_\ell^{\kappa\kappa}$')
 plt.xlabel(r'$\ell$')
 plt.ylabel(r'$C_\ell$')
 plt.title("Spectre de puissance de la convergence CMB (ACT DR6)")
 plt.legend()
 plt.grid(which="both", linestyle="--", linewidth=0.5)
 plt.show()
-
-
-
-
