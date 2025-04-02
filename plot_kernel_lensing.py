@@ -20,10 +20,11 @@ W_kappa /= np.max(W_kappa)  # normalization for visualization
 # Plotting
 plt.figure(figsize=(8,5))
 plt.plot(z, W_kappa, label=r'$W^\kappa(z)$ (CMB lensing kernel)')
-plt.axvline(1, color='r', linestyle='--', label='z ~ 1')
 plt.xlabel('Redshift z')
 plt.ylabel('Normalized lensing efficiency')
+plt.xlim(0, 5)
 plt.title('CMB Lensing Efficiency Kernel (with H(z))')
 plt.legend()
 plt.grid(True)
+plt.savefig('lensing_kernel.png', dpi=300)
 plt.show()
