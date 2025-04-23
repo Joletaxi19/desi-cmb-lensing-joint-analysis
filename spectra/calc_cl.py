@@ -13,19 +13,18 @@ readme+= "cij is a (nmaps,nmaps,nell) ndarray of spectra used to compute the cov
 readme+= "The order of 'map names' defines the order of cij. cov_X_Y_M_N is the covariance of C^{XY} and C^{MN}. "
 
 
-def get_bins(ledges,nside):
+def get_bins(bpws, nside):
     """
-    Takes an input set of ledges and sets up a NaMaster bin object.
-    
-    ledges : list of ell-bin edges
-    nside  : healpix nside
+    Crée un NmtBin à partir des bords `bpws` (typiquement LEDGES)
+    et ajoute le dernier bord 3*nside pour couvrir tout ℓ ≤ 3*nside-1.
+    Compatible NaMaster ≥ 2.0.
     """
-    # set up ell-bins
-    Nbin = len(ledges)-1
-    ells = np.arange(ledges[-1],dtype='int32')
-    bpws = np.zeros_like(ells) - 1
-    for i in range(Nbin): bpws[ledges[i]:ledges[i+1]] = i
-    bins = nmt.NmtBin(nside,bpws=bpws,ells=ells,weights=np.ones_like(ells))
+    import numpy as _np
+    import pymaster as nmt
+
+    edges = _np.array(bpws + [3*nside], dtype=int)   # borne haute exclue
+    ell_ini, ell_end = edges[:-1], edges[1:]
+    bins = nmt.NmtBin.from_edges(ell_ini, ell_end)
     return bins
 
     
