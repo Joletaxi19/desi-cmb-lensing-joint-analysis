@@ -15,10 +15,10 @@ mask  = hp.read_map(mask_file)
 
 # ------------------------------------------------------------------
 # 2) Lissage puis masquage ------------------------------
-good = mask > 0.8
+good = mask > 1 - 1e-1
 bad  = ~good
 
-fwhm_deg = 2.0
+fwhm_deg = 1.0 # lissage en degrés
 kappa_sm = hp.smoothing(
     kappa,                    # lisser la carte complète
     fwhm=np.radians(fwhm_deg),
@@ -30,11 +30,11 @@ kappa_sm[bad] = hp.UNSEEN
 # ------------------------------------------------------------------
 # 4) Colormap -----------------------------------------------
 
-cmap = plt.get_cmap('YlGnBu_r')
+cmap = plt.get_cmap('YlGnBu')
 cmap.set_bad("gray")
 cmap.set_under("white")
 
-vmin, vmax = -0.02, 0.02
+vmin, vmax = -0.05, 0.05
 
 # ------------------------------------------------------------------
 # 5) Figure ----------------------------------------------------------
@@ -50,6 +50,7 @@ hp.orthview(
     min=vmin, max=vmax,
     notext=True, cbar=False,
     title="",
+    xsize=7000,
 )
 
 hp.orthview(
@@ -62,6 +63,7 @@ hp.orthview(
     min=vmin, max=vmax,
     notext=True, cbar=False,
     title="",
+    xsize=7000,
 )
 
 # 5) colorbar
@@ -74,9 +76,14 @@ cbar = fig.colorbar(sm, cax=cax, orientation="horizontal")
 cbar.ax.set_xlabel(r"$\kappa$", fontsize=12)
 
 # 6) annotation en haut (légende)
-fig.text(0.5, 1,
-         f"Carte de convergence Planck PR4 – $\\ell<2500$, lissée à {fwhm_deg}° FWHM",
-         ha="center", va="top", fontsize=14)
+if fwhm_deg != 0.0:
+    fig.text(0.5, 1,
+            f"Carte de convergence Planck PR4 – $\\ell<2500$, lissée à {fwhm_deg}° FWHM",
+            ha="center", va="top", fontsize=14)
+else:
+    fig.text(0.5, 1,
+            f"Carte de convergence Planck PR4 – $\\ell<2500$",
+            ha="center", va="top", fontsize=14)
 
 # 7) sauvegarde
 plt.savefig(
