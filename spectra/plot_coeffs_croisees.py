@@ -2,8 +2,9 @@
 # -*- coding: utf-8 -*-
 """
 Usage :
-    python plot_cl.py lrg_cross_pr4.json
-    python plot_cl.py lrg_cross_pr3.json lrg_cross_pr4.json
+    python plot_coeffs_croisees.py lrg_cross_pr4.json
+    python plot_coeffs_croisees.py lrg_cross_pr3.json
+    python plot_coeffs_croisees.py lrg_cross_pr3.json lrg_cross_pr4.json
 """
 import json, argparse, re, itertools, pathlib
 import numpy as np

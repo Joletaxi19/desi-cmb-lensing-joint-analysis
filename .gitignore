@@ -39,3 +39,6 @@ spectra/__pycache__/calc_cl.cpython-310.pyc
 maps/PR4_lens_kap_filt.hpx2048.fits
 maps/PR3_lens_kap_filt.hpx2048.fits
 __pycache__/globe.cpython-310.pyc
+spectra/lrg_galaxy_auto.json
+spectra/pr4_kappa_auto.json
+spectra/fiducial/theory_bandpowers.json
