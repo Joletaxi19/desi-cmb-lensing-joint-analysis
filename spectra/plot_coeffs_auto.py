@@ -18,7 +18,7 @@ COL  = ["#332288","#88CCEE","#44AA99","#117733","#CC6677","#882255"]
 MAR  = ["o","s","D","^","v","P"]
 
 SHOT = dict(LRGz1=4.01e-6, LRGz2=2.24e-6, LRGz3=2.08e-6, LRGz4=2.31e-6)
-FSKY = 0.204         
+FSKY = 0.434         
 
 def read(fn):
     with open(fn) as f:
