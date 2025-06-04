@@ -10,8 +10,7 @@
 
 name=$1
 
-module load evp-patch
-conda activate cobaya
+cosmodesienv 2025_03
 export OMP_NUM_THREADS=2
 srun -n 1  -c 2 python minimize.py ${name}
 if [[ ${name} == chains/* ]]

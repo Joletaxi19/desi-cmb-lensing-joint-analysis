@@ -1,0 +1,267 @@
+likelihood:
+  cobaya_friendly_v3.XcorrLike:
+    python_path: /global/homes/j/jhawla/MaPar/likelihoods/
+    jsonfn: /global/homes/j/jhawla/MaPar/spectra/lrg_cross_pr4.json
+    kapNames:
+    - PR4
+    galNames:
+    - LRGz1
+    - LRGz2
+    - LRGz3
+    - LRGz4
+    dndzfns:
+    - /global/homes/j/jhawla/MaPar/data/dNdzs/LRGz1_dNdz.txt
+    - /global/homes/j/jhawla/MaPar/data/dNdzs/LRGz2_dNdz.txt
+    - /global/homes/j/jhawla/MaPar/data/dNdzs/LRGz3_dNdz.txt
+    - /global/homes/j/jhawla/MaPar/data/dNdzs/LRGz4_dNdz.txt
+    amin:
+    - 79
+    - 79
+    - 79
+    - 79
+    amax:
+    - 600
+    - 600
+    - 600
+    - 600
+    xmin:
+    - - 20
+      - 20
+      - 20
+      - 20
+    xmax:
+    - - 600
+      - 600
+      - 600
+      - 600
+    fidSN:
+    - 4.07e-06
+    - 2.25e-06
+    - 2.05e-06
+    - 2.25e-06
+    snfrac: 0.3
+    fida0:
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    a0prior:
+    - 50.0
+    - 50.0
+    - 50.0
+    - 50.0
+    fidaX:
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    aXprior:
+    - 2.0
+    - 2.0
+    - 2.0
+    - 2.0
+    chenprior: true
+    jeffreys: false
+    maximize: false
+    stop_at_error: true
+params:
+  n_s: 0.9649
+  omega_b: 0.02236
+  OmMh3: 0.09633
+  m_ncdm: 0.06
+  ln1e10As:
+    prior:
+      min: 2.0
+      max: 4.0
+    ref:
+      dist: norm
+      loc: 3.065
+      scale: 0.03
+    latex: \ln(10^{10}A_s)
+  omega_cdm:
+    prior:
+      min: 0.08
+      max: 0.16
+    ref:
+      dist: norm
+      loc: 0.1176
+      scale: 0.01
+    latex: \omega_c
+  H0: import_module('derived').get_H0
+  OmM:
+    derived: import_module('derived').get_OmM
+    latex: \Omega_m
+  sigma8:
+    derived: import_module('derived').get_sigma8_emu
+    latex: \sigma_8
+  S8:
+    derived: 'lambda OmM,sigma8: sigma8*(OmM/0.3)**0.5'
+    latex: S_8
+  S8x:
+    derived: 'lambda OmM,sigma8: sigma8*(OmM/0.3)**0.4'
+    latex: S^X_8
+  b1_LRGz1:
+    prior:
+      min: 0.0
+      max: 3.0
+    ref:
+      dist: norm
+      loc: 1.25
+      scale: 0.05
+    latex: b_1(z_1)
+  b2_LRGz1:
+    prior:
+      min: -5.0
+      max: 5.0
+    ref:
+      dist: norm
+      loc: 0.0
+      scale: 1.0
+    latex: b_2(z_1)
+  bs_LRGz1:
+    prior:
+      dist: norm
+      loc: 0.0
+      scale: 1.0
+    ref:
+      dist: norm
+      loc: 0.0
+      scale: 1.0
+    latex: b_s(z_1)
+  smag_LRGz1:
+    prior:
+      dist: norm
+      loc: 0.972
+      scale: 0.1
+    ref:
+      dist: norm
+      loc: 0.972
+      scale: 0.05
+    latex: s_{\mu}(z_1)
+  b1_LRGz2:
+    prior:
+      min: 0.0
+      max: 3.0
+    ref:
+      dist: norm
+      loc: 1.25
+      scale: 0.05
+    latex: b_1(z_2)
+  b2_LRGz2:
+    prior:
+      min: -5.0
+      max: 5.0
+    ref:
+      dist: norm
+      loc: 0.0
+      scale: 1.0
+    latex: b_2(z_2)
+  bs_LRGz2:
+    prior:
+      dist: norm
+      loc: 0.0
+      scale: 1.0
+    ref:
+      dist: norm
+      loc: 0.0
+      scale: 1.0
+    latex: b_s(z_2)
+  smag_LRGz2:
+    prior:
+      dist: norm
+      loc: 1.044
+      scale: 0.1
+    ref:
+      dist: norm
+      loc: 1.044
+      scale: 0.05
+    latex: s_{\mu}(z_2)
+  b1_LRGz3:
+    prior:
+      min: 0.0
+      max: 3.0
+    ref:
+      dist: norm
+      loc: 1.25
+      scale: 0.05
+    latex: b_1(z_3)
+  b2_LRGz3:
+    prior:
+      min: -5.0
+      max: 5.0
+    ref:
+      dist: norm
+      loc: 0.0
+      scale: 1.0
+    latex: b_2(z_3)
+  bs_LRGz3:
+    prior:
+      dist: norm
+      loc: 0.0
+      scale: 1.0
+    ref:
+      dist: norm
+      loc: 0.0
+      scale: 1.0
+    latex: b_s(z_3)
+  smag_LRGz3:
+    prior:
+      dist: norm
+      loc: 0.974
+      scale: 0.1
+    ref:
+      dist: norm
+      loc: 0.974
+      scale: 0.05
+    latex: s_{\mu}(z_3)
+  b1_LRGz4:
+    prior:
+      min: 0.0
+      max: 3.0
+    ref:
+      dist: norm
+      loc: 1.25
+      scale: 0.05
+    latex: b_1(z_4)
+  b2_LRGz4:
+    prior:
+      min: -5.0
+      max: 5.0
+    ref:
+      dist: norm
+      loc: 0.0
+      scale: 1.0
+    latex: b_2(z_4)
+  bs_LRGz4:
+    prior:
+      dist: norm
+      loc: 0.0
+      scale: 1.0
+    ref:
+      dist: norm
+      loc: 0.0
+      scale: 1.0
+    latex: b_s(z_4)
+  smag_LRGz4:
+    prior:
+      dist: norm
+      loc: 0.988
+      scale: 0.1
+    ref:
+      dist: norm
+      loc: 0.988
+      scale: 0.05
+    latex: s_{\mu}(z_4)
+sampler:
+  mcmc:
+    learn_proposal: true
+    learn_proposal_Rminus1_max: 10.0
+    output_every: 60s
+    measure_speeds: false
+    max_tries: 500
+    drag: false
+    proposal_scale: 1.5
+    Rminus1_stop: 0.01
+output: fiducial_noBAO_pr4
+timing: true
+stop_on_error: true

@@ -1,6 +1,6 @@
 #!/bin/bash -l
 #SBATCH -J run_chains
-#SBATCH -t 4:00:00
+#SBATCH -t 24:00:00
 #SBATCH -N 1
 #SBATCH -o log/run_chains.out
 #SBATCH -e log/run_chains.err
@@ -11,8 +11,7 @@
 name=$1
 
 date
-module load evp-patch
-conda activate cobaya
+cosmodesienv 2025_03
 export OMP_NUM_THREADS=8
 if test -f "chains/${name}.1.txt"
 then

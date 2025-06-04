@@ -1,0 +1,33 @@
+ -log(Like) = 27.613741330798668
+  chi-sq    = 55.227482661597335
+
+    6  8.576243789e-01   b1_LRGz1                             b_1(z_1)
+    7  1.066115549e+00   b1_LRGz2                             b_1(z_2)
+    8  1.257920420e+00   b1_LRGz3                             b_1(z_3)
+    9  1.348087479e+00   b1_LRGz4                             b_1(z_4)
+   10  6.807738958e-01   b2_LRGz1                             b_2(z_1)
+   11  7.395992466e-01   b2_LRGz2                             b_2(z_2)
+   12  8.277527061e-01   b2_LRGz3                             b_2(z_3)
+   13  2.196165878e-01   b2_LRGz4                             b_2(z_4)
+   14  8.275016109e-01   bs_LRGz1                             b_s(z_1)
+   15  1.967945943e-02   bs_LRGz2                             b_s(z_2)
+   16  -1.179855004e-02  bs_LRGz3                             b_s(z_3)
+   17  1.052354634e-04   bs_LRGz4                             b_s(z_4)
+   18  3.001367027e+00   ln1e10As                             \ln(10^{10}A_s)
+   22  1.153267512e-01   omega_cdm                            \omega_c
+   24  9.617810243e-01   smag_LRGz1                           s_{\mu}(z_1)
+   25  1.026789069e+00   smag_LRGz2                           s_{\mu}(z_2)
+   26  9.706618243e-01   smag_LRGz3                           s_{\mu}(z_3)
+   27  1.000633102e+00   smag_LRGz4                           s_{\mu}(z_4)
+
+    3  0.09633           OmMh3                                OmMh3
+   19  0.06              m_ncdm                               m\ ncdm
+   20  0.9649            n_s                                  n\ s
+   21  0.02236           omega_b                              omega\ b
+
+    1  6.963734799e+01   H0                                   H0
+    2  2.852560670e-01   OmM                                  \Omega_m
+    4  7.598610723e-01   S8                                   S_8
+    5  7.637000739e-01   S8x                                  S^X_8
+   23  7.792510184e-01   sigma8                               \sigma_8
+   28  3.465830711e+01   chi2__cobaya_friendly_v3.XcorrLike   \chi^2_{\rm cobaya\ friendly\ v3.XcorrLike}

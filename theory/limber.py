@@ -1,5 +1,5 @@
 import numpy as np
-from scipy.integrate   import simps
+from scipy.integrate   import simpson
 from scipy.interpolate import interp1d
 from scipy.interpolate import InterpolatedUnivariateSpline as Spline
     
@@ -58,7 +58,7 @@ class limb():
       # that \int dN/dz dz = 1 for each galaxy sample
       self.dNdz  = np.zeros((self.Nz,self.Ng))
       for j in range(self.Ng): self.dNdz[:,j] = np.interp(self.z,dNdz[:,0],dNdz[:,j+1],left=0,right=0)
-      norm       = simps(self.dNdz, x=self.z, axis=0)     # (Ng) ndarray
+      norm       = simpson(self.dNdz, x=self.z, axis=0)     # (Ng) ndarray
       norm       = self.gridMe(norm)
       self.dNdz /= norm
       # store theory predictions 
@@ -252,18 +252,18 @@ class limb():
       integrand  = reshape_kernel(Wg_clust**2)                  * PggIntrp[:,:,0]
       integrand += 2*(5*smag-2)*reshape_kernel(Wg_mag*Wg_clust) * PgmIntrp[:,:,0]
       integrand += (5*smag-2)**2*reshape_kernel(Wg_mag**2)      * Pgrid
-      integral   = simps(integrand,x=chi,axis=0)
+      integral   = simpson(integrand,x=chi,axis=0)
       Cgg[:,0]   = Spline(self.lval,integral)(self.l)
       # the mono_auto pieces
       for j in range(Nmono_auto-1):
          integrand  = reshape_kernel(Wg_clust**2) * PggIntrp[:,:,j+1]
-         integral   = simps(integrand,x=chi,axis=0)
+         integral   = simpson(integrand,x=chi,axis=0)
          Cgg[:,j+1] = Spline(self.lval,integral)(self.l)
       # adding shot noise (already ones)
       # the mono_cros pieces
       for j in range(Nmono_cros-1):
          integrand = 2*(5*smag-2)*reshape_kernel(Wg_clust*Wg_mag) * PgmIntrp[:,:,j+1]
-         integral  = simps(integrand,x=chi,axis=0)
+         integral  = simpson(integrand,x=chi,axis=0)
          Cgg[:,j+1+Nmono_auto] = Spline(self.lval,integral)(self.l)
       
       ##### Ckg
@@ -271,13 +271,13 @@ class limb():
       # the "1" piece
       integrand  = reshape_kernel(Wk*Wg_clust)          * PgmIntrp[:,:,0]
       integrand += (5*smag-2)*reshape_kernel(Wk*Wg_mag) * Pgrid
-      integral   = simps(integrand,x=chi,axis=0)
-      Ckg[:,0]   = Spline(self.lval,integral)(self.l)  
-      # the mono_auto pieces are zero (including shot noise)          
+      integral   = simpson(integrand,x=chi,axis=0)
+      Ckg[:,0]   = Spline(self.lval,integral)(self.l)
+      # the mono_auto pieces are zero (including shot noise)
       # the mono_cros pieces
       for j in range(Nmono_cros-1):
          integrand = reshape_kernel(Wk*Wg_clust) * PgmIntrp[:,:,j+1]
-         integral  = simps(integrand,x=chi,axis=0) 
+         integral  = simpson(integrand,x=chi,axis=0) 
          Ckg[:,j+1+Nmono_auto] = Spline(self.lval,integral)(self.l)
           
       return Cgg,Ckg
@@ -326,7 +326,7 @@ class limb():
       integrand += reshape_kernel((5*smag(self.z)-2)*Wgi_mag*Wgj_clust)  * PgmGrid
       integrand += reshape_kernel((5*smag(self.z)-2)*Wgj_mag*Wgi_clust)  * PgmGrid
       integrand += reshape_kernel((5*smag(self.z)-2)**2*Wgi_mag*Wgj_mag) * PmmGrid
-      integral   = simps(integrand,x=chi,axis=0)
+      integral   = simpson(integrand,x=chi,axis=0)
       Cgigj      = Spline(self.lval,integral)(self.l)
           
       return Cgigj
@@ -364,7 +364,7 @@ class limb():
       ##### Ckgi
       integrand  = reshape_kernel(Wk*Wgi_clust)                  * PgmGrid
       integrand += reshape_kernel((5*smag(self.z)-2)*Wk*Wgi_mag) * PmmGrid
-      integral   = simps(integrand,x=chi,axis=0)
+      integral   = simpson(integrand,x=chi,axis=0)
       Ckgi       = Spline(self.lval,integral)(self.l)
           
       return Ckgi
