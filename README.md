@@ -24,3 +24,6 @@ still in flux
 # Basic Usage
 
 need to write the code first
+
+`plot_chains.py` accepts a `--label` option to set the legend label used in
+triangle plots. If omitted, the plot label defaults to the chain's file root.
