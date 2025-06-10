@@ -19,11 +19,18 @@ def main():
     ap.add_argument("--chain_dir", default="yamls/chains", help="directory with chain files")
     ap.add_argument("--file_root", default="my_pr4", help="prefix of the chain files")
     ap.add_argument(
+        "--label",
+        default=None,
+        help="legend label (default: use file_root)",
+    )
+    ap.add_argument(
         "--params", nargs="+", default=["OmM", "sigma8", "S8x"],
         help="parameters to display in the triangle plot",
     )
     ap.add_argument("--output", "-o", help="output image filename")
     args = ap.parse_args()
+
+    legend_label = args.label if args.label is not None else args.file_root
 
     root = os.path.join(args.chain_dir, args.file_root)
     chain = loadMCSamples(root)
@@ -41,7 +48,7 @@ def main():
 
     make_triangle_plot(
         [chain],
-        [args.file_root],
+        [legend_label],
         args.params,
         filled=True,
         save_path=args.output,
