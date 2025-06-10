@@ -8,11 +8,3 @@
   r = _umath_linalg.det(a, signature=signature)
 /global/common/software/desi/users/adematti/perlmutter/cosmodesiconda/20250331-1.0.0/conda/lib/python3.10/site-packages/numpy/linalg/linalg.py:2180: RuntimeWarning: invalid value encountered in det
   r = _umath_linalg.det(a, signature=signature)
-/global/common/software/desi/users/adematti/perlmutter/cosmodesiconda/20250331-1.0.0/conda/lib/python3.10/site-packages/numpy/linalg/linalg.py:2180: RuntimeWarning: invalid value encountered in det
-  r = _umath_linalg.det(a, signature=signature)
-/global/common/software/desi/users/adematti/perlmutter/cosmodesiconda/20250331-1.0.0/conda/lib/python3.10/site-packages/numpy/linalg/linalg.py:2180: RuntimeWarning: invalid value encountered in det
-  r = _umath_linalg.det(a, signature=signature)
-/global/common/software/desi/users/adematti/perlmutter/cosmodesiconda/20250331-1.0.0/conda/lib/python3.10/site-packages/numpy/linalg/linalg.py:2180: RuntimeWarning: invalid value encountered in det
-  r = _umath_linalg.det(a, signature=signature)
-slurmstepd: error: *** STEP 39266407.0 ON nid006548 CANCELLED AT 2025-06-04T09:58:38 DUE TO TIME LIMIT ***
-slurmstepd: error: *** JOB 39266407 ON nid006548 CANCELLED AT 2025-06-04T09:58:38 DUE TO TIME LIMIT ***

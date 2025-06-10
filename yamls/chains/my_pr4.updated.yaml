@@ -337,7 +337,7 @@ sampler:
     drag_limits: null
     fallback_covmat_scale: 4
     version: 3.5.7
-output: fiducial_noBAO_pr4
+output: my_pr4
 timing: true
 stop_on_error: true
 version: 3.5.7

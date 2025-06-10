@@ -1,5 +1,10 @@
+theory: null
 likelihood:
   cobaya_friendly_v3.XcorrLike:
+    type: []
+    speed: -1
+    stop_at_error: true
+    version: null
     python_path: /global/homes/j/jhawla/MaPar/likelihoods/
     jsonfn: /global/homes/j/jhawla/MaPar/spectra/lrg_cross_pr4.json
     kapNames:
@@ -63,12 +68,39 @@ likelihood:
     chenprior: true
     jeffreys: false
     maximize: false
-    stop_at_error: true
+    input_params:
+    - n_s
+    - omega_b
+    - m_ncdm
+    - ln1e10As
+    - omega_cdm
+    - H0
+    - b1_LRGz1
+    - b2_LRGz1
+    - bs_LRGz1
+    - smag_LRGz1
+    - b1_LRGz2
+    - b2_LRGz2
+    - bs_LRGz2
+    - smag_LRGz2
+    - b1_LRGz3
+    - b2_LRGz3
+    - bs_LRGz3
+    - smag_LRGz3
+    - b1_LRGz4
+    - b2_LRGz4
+    - bs_LRGz4
+    - smag_LRGz4
+    output_params: []
 params:
-  n_s: 0.9649
-  omega_b: 0.02236
-  OmMh3: 0.09633
-  m_ncdm: 0.06
+  n_s:
+    value: 0.9649
+  omega_b:
+    value: 0.02236
+  OmMh3:
+    value: 0.09633
+  m_ncdm:
+    value: 0.06
   ln1e10As:
     prior:
       min: 2.0
@@ -87,7 +119,9 @@ params:
       loc: 0.1176
       scale: 0.01
     latex: \omega_c
-  H0: import_module('derived').get_H0
+  H0:
+    value: import_module('derived').get_H0
+    derived: true
   OmM:
     derived: import_module('derived').get_OmM
     latex: \Omega_m
@@ -254,14 +288,56 @@ params:
     latex: s_{\mu}(z_4)
 sampler:
   mcmc:
+    burn_in: 0
+    max_tries: 500
+    covmat: null
+    covmat_params: null
+    proposal_scale: 1.5
+    output_every: 60s
+    learn_every: 40d
+    temperature: 1
     learn_proposal: true
     learn_proposal_Rminus1_max: 10.0
-    output_every: 60s
-    measure_speeds: false
-    max_tries: 500
-    drag: false
-    proposal_scale: 1.5
+    learn_proposal_Rminus1_max_early: 30.0
+    learn_proposal_Rminus1_min: 0.0
+    max_samples: .inf
     Rminus1_stop: 0.01
-output: fiducial_noBAO_pr4
+    Rminus1_cl_stop: 0.2
+    Rminus1_cl_level: 0.95
+    Rminus1_single_split: 4
+    measure_speeds: false
+    oversample_power: 0.4
+    oversample_thin: true
+    drag: false
+    blocking:
+    - - 1
+      - - ln1e10As
+        - omega_cdm
+        - b1_LRGz1
+        - b2_LRGz1
+        - bs_LRGz1
+        - smag_LRGz1
+        - b1_LRGz2
+        - b2_LRGz2
+        - bs_LRGz2
+        - smag_LRGz2
+        - b1_LRGz3
+        - b2_LRGz3
+        - bs_LRGz3
+        - smag_LRGz3
+        - b1_LRGz4
+        - b2_LRGz4
+        - bs_LRGz4
+        - smag_LRGz4
+    callback_function: null
+    callback_every: null
+    seed: null
+    check_every: null
+    oversample: null
+    drag_limits: null
+    fallback_covmat_scale: 4
+    version: 3.5.7
+output: my_pr4
 timing: true
 stop_on_error: true
+version: 3.5.7
