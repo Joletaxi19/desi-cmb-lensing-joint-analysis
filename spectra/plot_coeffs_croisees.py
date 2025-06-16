@@ -101,9 +101,9 @@ def make_panels(bins, data_files, theory_file, output_prefix):
         ax_r = axes_bot[i]
 
         # Theory line
-        if theory_file and f"cl_PR4_{b}" in theory_file[2]:
+        if theory_file and b in theory_file[2]:
             th_ell = theory_file[1]
-            th_spec = theory_file[2][f"cl_PR4_{b}"]
+            th_spec = theory_file[2][b]
             line, = ax.plot(th_ell, th_spec, 'k-', lw=2, alpha=0.7)
             if i == 0:
                 legend_handles.append(line)
@@ -119,7 +119,7 @@ def make_panels(bins, data_files, theory_file, output_prefix):
                 legend_handles.append(eb)
                 legend_labels.append(label)
 
-            if theory_file and f"cl_PR4_{b}" in theory_file[2]:
+            if theory_file and b in theory_file[2]:
                 th_interp = interp1d(th_ell, th_spec, bounds_error=False,
                                      fill_value=(th_spec[0], th_spec[-1]))
                 th_at_data = th_interp(ell)
