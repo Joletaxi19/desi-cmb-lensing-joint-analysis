@@ -40,10 +40,10 @@ COLORS   = ["#332288", "#88CCEE", "#44AA99", "#117733",
 MARKERS  = ["o", "s", "D", "^", "v", ">", "<", "P"]
 
 FULL_NAMES = {
-    "LRGz1": "LRG bin z1",
-    "LRGz2": "LRG bin z2",
-    "LRGz3": "LRG bin z3",
-    "LRGz4": "LRG bin z4",
+    "LRGz1": "LRG bin z1 (0.4 < z < 0.6)",
+    "LRGz2": "LRG bin z2 (0.6 < z < 0.8)",
+    "LRGz3": "LRG bin z3 (0.8 < z < 1.0)",
+    "LRGz4": "LRG bin z4 (1.0 < z < 1.2)",
 }
 
 # ---------- OUTILS ----------
@@ -107,7 +107,7 @@ def make_panels(bins, data_files, theory_file, output_prefix):
             line, = ax.plot(th_ell, th_spec, 'k-', lw=2, alpha=0.7)
             if i == 0:
                 legend_handles.append(line)
-                legend_labels.append("Théorie")
+                legend_labels.append("Théorie (HEFT)")
 
         for (label, ell, cls, covs), color, marker in zip(data_files, itertools.cycle(COLORS), itertools.cycle(MARKERS)):
             spec = cls[b]
@@ -133,7 +133,7 @@ def make_panels(bins, data_files, theory_file, output_prefix):
         ax.set_yscale('log')
         ax.set_xscale('log')
         ax.grid(ls=':')
-
+        ax.tick_params(labelbottom=False)
         ax_r.axhline(1.0, color='k', ls='--', alpha=0.5)
         ax_r.set_ylim(0.5, 1.5)
         ax_r.set_xscale('log')
@@ -141,7 +141,7 @@ def make_panels(bins, data_files, theory_file, output_prefix):
         ax_r.grid(ls=':')
         if i == 0:
             ax.set_ylabel(r"$C_\ell^{\kappa g}$")
-            ax_r.set_ylabel("Données/Th")
+            ax_r.set_ylabel("Données/Théorie")
 
         ax_r.set_xlim(30, 3000)
 

@@ -110,7 +110,7 @@ def main():
     )
 
     plt.xticks(rotation=45, ha="right")
-    ax.set_title("Matrice de corrélation des paramètres")
+    #ax.set_title("Matrice de corrélation des paramètres")
     plt.tight_layout()
     plt.savefig(args.output)
     plt.close(fig)

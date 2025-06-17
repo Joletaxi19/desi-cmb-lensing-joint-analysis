@@ -68,22 +68,23 @@ hp.orthview(
 
 # 5) colorbar
 import matplotlib as mpl
-cax = fig.add_axes([0.10, 0.0, 0.80, 0.02])
+cax = fig.add_axes([0.10, -0.08, 0.80, 0.045])
 norm = mpl.colors.Normalize(vmin=vmin, vmax=vmax)
 sm   = mpl.cm.ScalarMappable(cmap=cmap, norm=norm)
 sm.set_array([])
 cbar = fig.colorbar(sm, cax=cax, orientation="horizontal")
-cbar.ax.set_xlabel(r"$\kappa$", fontsize=12)
+cbar.ax.tick_params(labelsize=16)
+cbar.set_label(r"$\kappa$", fontsize=18, labelpad=10)
 
 # 6) annotation en haut (légende)
-if fwhm_deg != 0.0:
-    fig.text(0.5, 1,
-            f"Carte de convergence Planck PR4 – $\\ell<2500$, lissée à {fwhm_deg}° FWHM",
-            ha="center", va="top", fontsize=14)
-else:
-    fig.text(0.5, 1,
-            f"Carte de convergence Planck PR4 – $\\ell<2500$",
-            ha="center", va="top", fontsize=14)
+#if fwhm_deg != 0.0:
+#    fig.text(0.5, 1,
+#            f"Carte de convergence Planck PR4 – $\\ell<2500$, lissée à {fwhm_deg}° FWHM",
+#            ha="center", va="top", fontsize=14)
+#else:
+#    fig.text(0.5, 1,
+#            f"Carte de convergence Planck PR4 – $\\ell<2500$",
+#            ha="center", va="top", fontsize=14)
 
 # 7) sauvegarde
 plt.savefig(

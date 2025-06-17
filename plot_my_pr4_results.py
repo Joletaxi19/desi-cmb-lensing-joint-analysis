@@ -16,13 +16,15 @@ progress = pd.read_csv(
 
 plt.figure(figsize=(8, 5))
 plt.plot(progress['N'], progress['Rminus1'], marker='o', ms=4)
-plt.xlabel('Nombre de points')
-plt.ylabel(r'$\hat{R}-1$')
+plt.xlabel('Nombre de points', fontsize=16)
+plt.ylabel(r'$\hat{R}-1$', fontsize=16)
 plt.yscale('log')
-plt.title('Convergence des chaînes')
+plt.axhline(0.01, color='r', ls='--', lw=1, label=r'$\hat{R}-1=0.01$')
+#plt.title('Convergence des chaînes')
 plt.grid(True)
+plt.legend(fontsize=12)
 plt.tight_layout()
-plt.savefig('my_pr4_convergence.png')
+plt.savefig('my_pr4_convergence.png', dpi=300)
 
 # Scatter plot of chains
 chain_files = sorted(glob.glob('yamls/chains/my_pr4.[0-9]*.txt'),
@@ -37,10 +39,10 @@ for idx, (chain_file, color) in enumerate(zip(chain_files, palette)):
     if len(data) > 2000:
         data = data.sample(2000, random_state=0)
     plt.scatter(data['OmM'], data['sigma8'], s=10, color=color, alpha=0.6,
-                label=f'Chaîne {idx+1}')
+                label=f'{idx+1}')
 plt.xlabel(r'$\Omega_m$')
 plt.ylabel(r'$\sigma_8$')
-plt.title('Exploration des chaînes')
+#plt.title('Exploration des chaînes')
 plt.legend(ncol=2, fontsize=10)
 plt.tight_layout()
-plt.savefig('my_pr4_scatter.png')
+plt.savefig('my_pr4_scatter.png', dpi=300)

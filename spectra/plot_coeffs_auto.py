@@ -170,7 +170,7 @@ def main():
             ax_top.set_xscale('log')
             
             if i == 0:
-                ax_top.set_ylabel(r"$C_\ell$ (shot-noise retiré)", fontsize=11)
+                ax_top.set_ylabel(r"$C_\ell^{gg}$ (shot-noise retiré)", fontsize=11)
             
             # Limites des axes adaptées à chaque bin
             if m == 'LRGz1': ax_top.set_ylim(1e-6, 3e-4)
@@ -256,10 +256,10 @@ def main():
                                      elinewidth=1.5, markeredgecolor='black', markeredgewidth=0.5)
         
         # Finalisation du panneau supérieur pour kappa
-        ax_top.set_title(r"CMB Lensing (PR4) - $C_\ell^{\kappa\kappa} + N_\ell^{\kappa\kappa}$", fontsize=12, pad=10)
+        #ax_top.set_title(r"CMB Lensing (PR4) - $C_\ell^{\kappa\kappa} + N_\ell^{\kappa\kappa}$", fontsize=12, pad=10)
         ax_top.set_yscale('log')
         ax_top.set_xscale('log')
-        ax_top.set_ylabel(r"$C_\ell^{\kappa\kappa}$", fontsize=12)
+        ax_top.set_ylabel(r"$C_\ell^{\kappa\kappa} + N_\ell^{\kappa\kappa}$", fontsize=12)
         ax_top.set_ylim(1e-8, 1e-5)
         ax_top.tick_params(labelbottom=False)
         

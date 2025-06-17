@@ -50,19 +50,30 @@ def main():
 
     corr = covariance_to_correlation(covs[key])
 
+    mask = np.eye(corr.shape[0], dtype=bool)
+
+    off_diag = corr[~mask]
+    vmax = np.max(np.abs(off_diag))
+    vmin = -vmax
+
     sns.set_context("talk")
     fig, ax = plt.subplots(figsize=(6, 5))
     sns.heatmap(
         corr,
         cmap="RdBu_r",
-        vmin=-1,
-        vmax=1,
+        vmin=vmin,
+        vmax=vmax,
         center=0,
         square=True,
         cbar_kws={"label": "coefficient"},
         ax=ax,
     )
-    ax.set_title(f"Correlation matrix: {key}")
+
+    for i in range(corr.shape[0]):
+        ax.add_patch(plt.Rectangle((i, i), 1, 1, fill=True, color="lightgrey", lw=0))
+        ax.text(i + 0.5, i + 0.5, f"{corr[i, i]:.2f}", color="black",
+                ha="center", va="center", fontsize=8)
+    #ax.set_title(f"Correlation matrix: {key}", fontsize=12)
     ax.set_xlabel(r"$\ell$")
     ax.set_ylabel(r"$\ell$")
     plt.tight_layout()
