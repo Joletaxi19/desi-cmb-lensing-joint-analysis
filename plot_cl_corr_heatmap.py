@@ -134,9 +134,22 @@ def main():
             cbar_kws={"label": "coefficient"},
             ax=ax,
         )
+
+        # mark each sub-matrix and label axes with the corresponding spectrum
+        n = len(labels)
+        nell = len(ell)
+        positions = np.arange(n) * nell + (nell - 1) / 2
+        ax.set_xticks(positions)
+        ax.set_xticklabels(labels, rotation=90)
+        ax.set_yticks(positions)
+        ax.set_yticklabels(labels)
+        for pos in np.arange(1, n) * nell:
+            ax.axhline(pos, color="k", lw=0.5)
+            ax.axvline(pos, color="k", lw=0.5)
+
         ax.set_title("Correlation matrix: all spectra")
-        ax.set_xlabel("data vector index")
-        ax.set_ylabel("data vector index")
+        ax.set_xlabel("spectrum block")
+        ax.set_ylabel("spectrum block")
         plt.tight_layout()
         out = args.output or "corr_all_spectra.png"
         plt.savefig(out)
