@@ -124,11 +124,14 @@ def main():
 
         sns.set_context("talk")
         fig, ax = plt.subplots(figsize=(8, 6))
+        mask = np.eye(corr.shape[0], dtype=bool)
+        vmax = np.max(np.abs(corr[~mask])) if corr.size > 1 else 1
         sns.heatmap(
             corr,
+            mask=mask,
             cmap="RdBu_r",
-            vmin=-1,
-            vmax=1,
+            vmin=-vmax,
+            vmax=vmax,
             center=0,
             square=True,
             cbar_kws={"label": "coefficient"},
@@ -139,15 +142,20 @@ def main():
         n = len(labels)
         nell = len(ell)
         positions = np.arange(n) * nell + (nell - 1) / 2
+        def pretty(lbl):
+            lbl = lbl.replace("LRG", "")
+            lbl = lbl.replace("PR4", "κ")
+            return lbl.replace("_", "×")
+
+        short = [pretty(l) for l in labels]
         ax.set_xticks(positions)
-        ax.set_xticklabels(labels, rotation=90)
+        ax.set_xticklabels(short, rotation=90)
         ax.set_yticks(positions)
-        ax.set_yticklabels(labels)
+        ax.set_yticklabels(short)
         for pos in np.arange(1, n) * nell:
             ax.axhline(pos, color="k", lw=0.5)
             ax.axvline(pos, color="k", lw=0.5)
 
-        ax.set_title("Correlation matrix: all spectra")
         ax.set_xlabel("spectrum block")
         ax.set_ylabel("spectrum block")
         plt.tight_layout()
