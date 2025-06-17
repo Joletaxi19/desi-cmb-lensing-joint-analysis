@@ -17,6 +17,32 @@ import seaborn as sns
 from likelihoods.pack_data import get_cov
 
 
+def safe_get_cov(data, name1, name2, name3, name4, nell):
+    """Return covariance block if present else zeros."""
+
+    def tryit(pair1, pair2, transpose=False):
+        try:
+            res = np.asarray(data[f"cov_{pair1}_{pair2}"])
+            if transpose:
+                res = res.T
+            return res
+        except KeyError:
+            return None
+
+    perms12 = [f"{name1}_{name2}", f"{name2}_{name1}"]
+    perms34 = [f"{name3}_{name4}", f"{name4}_{name3}"]
+    for i in range(2):
+        for j in range(2):
+            res = tryit(perms12[i], perms34[j])
+            if res is not None:
+                return res
+            res = tryit(perms34[i], perms12[j], transpose=True)
+            if res is not None:
+                return res
+    # fall back to zeros when covariance block is missing
+    return np.zeros((nell, nell))
+
+
 def load_json(path):
     """Return ell values and covariance matrices from ``path``."""
     with open(path) as f:
@@ -64,7 +90,7 @@ def build_full_covariance(data, kap_name="PR4", gal_names=None):
     cov = np.zeros((n * nell, n * nell))
     for i, (a1, a2) in enumerate(pairs):
         for j, (b1, b2) in enumerate(pairs):
-            cov_block = get_cov(data, a1, a2, b1, b2)
+            cov_block = safe_get_cov(data, a1, a2, b1, b2, nell)
             cov[i * nell : (i + 1) * nell, j * nell : (j + 1) * nell] = cov_block
 
     labels = [f"{p[0]}_{p[1]}" for p in pairs]
