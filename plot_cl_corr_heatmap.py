@@ -21,7 +21,10 @@ def load_json(path):
     """Return ell values and covariance matrices from ``path``."""
     with open(path) as f:
         data = json.load(f)
-    ell = np.asarray(data.get("ell") or data.get("ells"))
+    if "ell" in data:
+        ell = np.asarray(data["ell"])
+    else:
+        ell = np.asarray(data["ells"])
     covs = {
         k[4:]: np.asarray(v) for k, v in data.items() if k.startswith("cov_")
     }
@@ -47,7 +50,10 @@ def build_full_covariance(data, kap_name="PR4", gal_names=None):
     if gal_names is None:
         gal_names = [f"LRGz{i}" for i in range(1, 5)]
 
-    ell = np.asarray(data.get("ell") or data.get("ells"))
+    if "ell" in data:
+        ell = np.asarray(data["ell"])
+    else:
+        ell = np.asarray(data["ells"])
     nell = len(ell)
 
     pairs = [(g, g) for g in gal_names] + [
