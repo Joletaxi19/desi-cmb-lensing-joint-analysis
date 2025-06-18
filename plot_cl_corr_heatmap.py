@@ -125,6 +125,15 @@ def main():
         sns.set_context("talk")
         fig, ax = plt.subplots(figsize=(8, 6))
         mask = np.eye(corr.shape[0], dtype=bool)
+
+        n = len(labels)
+        nel = len(ell)
+        for bi in range(n):
+            rows = bi*nel + np.arange(nel)
+            for bj in range(n):
+                cols = bj*nel + np.arange(nel)
+                mask[rows, cols] = True
+
         vmax = np.max(np.abs(corr[~mask])) if corr.size > 1 else 1
         sns.heatmap(
             corr,
