@@ -21,11 +21,18 @@ for m, mask in zip(lrg_maps, lrg_masks):
 
 # ------------------------------------------------------------------
 # 3) Colormap -------------------------------------------------------
-cmap = plt.get_cmap('coolwarm')
+cmap = plt.get_cmap("RdYlBu_r")
 cmap.set_bad('gray')
 cmap.set_under('white')
 
-vmin, vmax = -0.5, 0.5
+all_data = []
+for m, mask in zip(lrg_maps, lrg_masks):
+    valid = mask != 0
+    all_data.append(m[valid])
+
+stack = np.concatenate(all_data)
+vmax = np.percentile(np.abs(stack), 99)
+vmin = -vmax
 
 # ------------------------------------------------------------------
 # 4) Figure ---------------------------------------------------------
@@ -34,12 +41,14 @@ fig = plt.figure(figsize=(14, 12))
 for i, m in enumerate(lrg_maps):
     hp.mollview(
         m,
-        sub=(2, 2, i+1),
-        title=f"LRG bin z{i+1}",
-        coord='G',
+        sub=(2, 2, i + 1),
+        title=f"LRG bin z{i + 1}",
+        coord="G",
         cmap=cmap,
-        min=vmin, max=vmax,
+        min=vmin,
+        max=vmax,
         notext=True,
+        cbar=False,
     )
 
 # 5) colorbar -------------------------------------------------------
