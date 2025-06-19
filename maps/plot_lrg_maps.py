@@ -1,7 +1,8 @@
 import healpy as hp
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib as mpl
+from matplotlib import cm
+from matplotlib.colors import ListedColormap, LinearSegmentedColormap, Normalize
 
 # ------------------------------------------------------------------
 # 0) Input files ----------------------------------------------------
@@ -10,55 +11,96 @@ mask_files = [f"masks/lrg_s0{i}_msk.hpx2048.public.fits.gz" for i in range(1,5)]
 
 # ------------------------------------------------------------------
 # 1) Read maps ------------------------------------------------------
-lrg_maps = [hp.read_map(f) for f in lrg_files]
-lrg_masks = [hp.read_map(f) for f in mask_files]
+lrg_maps = []
+lrg_masks = []
 
-# ------------------------------------------------------------------
-# 2) Apply masks ----------------------------------------------------
-for m, mask in zip(lrg_maps, lrg_masks):
+for lrg_file, mask_file in zip(lrg_files, mask_files):
+    lrg_map = hp.read_map(lrg_file)
+    mask = hp.read_map(mask_file)
+    
+    # Apply mask directly
     bad = mask == 0
-    m[bad] = hp.UNSEEN
+    lrg_map[bad] = hp.UNSEEN
+    
+    lrg_maps.append(lrg_map)
+    lrg_masks.append(mask)
 
 # ------------------------------------------------------------------
-# 3) Colormap -------------------------------------------------------
-cmap = plt.get_cmap("RdYlBu_r")
-cmap.set_bad('gray')
-cmap.set_under('white')
-
-all_data = []
+# 2) Calculate color scale with enhanced contrast -------------------
+valid_data = []
 for m, mask in zip(lrg_maps, lrg_masks):
     valid = mask != 0
-    all_data.append(m[valid])
+    valid_data.extend(m[valid])
 
-stack = np.concatenate(all_data)
-vmax = np.percentile(np.abs(stack), 99)
+valid_data = np.array(valid_data)
+
+vmax = np.percentile(np.abs(valid_data), 95)
 vmin = -vmax
 
 # ------------------------------------------------------------------
-# 4) Figure ---------------------------------------------------------
-fig = plt.figure(figsize=(14, 12))
+# 3) Create custom colormap for better contrast ---------------------
+colors_r = plt.cm.Blues_r(np.linspace(0.2, 0.8, 128))
+colors_b = plt.cm.Reds(np.linspace(0.2, 0.8, 128))
+colors = np.vstack((colors_r, colors_b))
+custom_cmap = ListedColormap(colors)
+custom_cmap.set_bad('lightgray', alpha=0.5)
+custom_cmap.set_under('white')
+custom_cmap.set_over('purple')
 
-for i, m in enumerate(lrg_maps):
+# ------------------------------------------------------------------
+# 4) Create figure -------------------------------------------------
+fig = plt.figure(figsize=(18, 12))
+
+titles = [
+    "LRG bin 1 (0.4 < z < 0.6)",
+    "LRG bin 2 (0.6 < z < 0.8)", 
+    "LRG bin 3 (0.8 < z < 1.0)",
+    "LRG bin 4 (1.0 < z < 1.2)"
+]
+positions = [221, 222, 223, 224]
+
+# ------------------------------------------------------------------
+# 5) Plot each map with enhanced contrast --------------------------
+for i, (m, pos, title) in enumerate(zip(lrg_maps, positions, titles)):
     hp.mollview(
-        m,
-        sub=(2, 2, i + 1),
-        title=f"LRG bin z{i + 1}",
-        coord="G",
-        cmap=cmap,
+        map=m,
+        fig=fig.number,
+        sub=pos,
+        title=title,
+        cmap=custom_cmap,
         min=vmin,
         max=vmax,
-        notext=True,
         cbar=False,
+        notext=True,
+        coord="G",
+        rot=(0, 0, 0)
     )
+    
+    hp.graticule(dpar=20, dmer=30, color='gray', alpha=0.3)
 
-# 5) colorbar -------------------------------------------------------
-cax = fig.add_axes([0.15, 0.05, 0.7, 0.04])
-norm = mpl.colors.Normalize(vmin=vmin, vmax=vmax)
-sm = mpl.cm.ScalarMappable(cmap=cmap, norm=norm)
-sm.set_array([])
-cbar = fig.colorbar(sm, cax=cax, orientation='horizontal')
-cbar.ax.tick_params(labelsize=12)
-cbar.set_label(r'$\delta_{\mathrm{LRG}}$', fontsize=14, labelpad=8)
+# ------------------------------------------------------------------
+# 6) Add colorbar with ticks ---------------------------------------
+cbar_ax = fig.add_axes([0.15, 0.05, 0.7, 0.03])
 
-# 6) Save -----------------------------------------------------------
+norm = Normalize(vmin=vmin, vmax=vmax)
+cb = fig.colorbar(
+    cm.ScalarMappable(norm=norm, cmap=custom_cmap),
+    cax=cbar_ax,
+    orientation='horizontal',
+    extend='both'
+)
+# Ajouter plus de graduations pour mieux interpréter les valeurs
+tick_positions = np.linspace(vmin, vmax, 9)
+cb.set_ticks(tick_positions)
+cb.set_ticklabels([f"{x:.2f}" for x in tick_positions])
+cb.set_label(r'$\delta_{\mathrm{LRG}}$ (surdensité)', fontsize=18)
+cb.ax.tick_params(labelsize=12)
+
+# Améliorer l'espacement pour une meilleure lisibilité
+plt.subplots_adjust(wspace=0.05, hspace=0.1, top=0.92, bottom=0.1)
+
+# Sauvegarder en haute résolution
 plt.savefig('desi_lrg_bins.png', dpi=300, bbox_inches='tight')
+
+print("Figures sauvegardées avec contraste amélioré!")
+print("Version principale: 'desi_lrg_bins.png'")
