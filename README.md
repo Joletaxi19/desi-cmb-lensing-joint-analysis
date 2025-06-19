@@ -27,3 +27,9 @@ need to write the code first
 
 `plot_chains.py` accepts a `--label` option to set the legend label used in
 triangle plots. If omitted, the plot label defaults to the chain's file root.
+
+The `maps` directory provides small utilities for visualizing the data. For
+instance `plot_kappa_maps.py` displays the Planck PR4 convergence map, and
+`plot_lrg_maps.py` shows the DESI LRG galaxy density maps.  The script
+`plot_lrg_catalog.py` instead plots individual LRG galaxies in 3D with a color
+coding for the four redshift bins used in the analysis.
