@@ -46,6 +46,8 @@ def main():
     except Exception:
         pass
 
+    print("Available parameters:", param_names)
+
     make_triangle_plot(
         [chain],
         [legend_label],

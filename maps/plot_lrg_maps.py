@@ -76,6 +76,8 @@ for i, (m, pos, title) in enumerate(zip(lrg_maps, positions, titles)):
         rot=(0, 0, 0)
     )
     
+    plt.gca().set_title(title, fontsize=24, pad=20)
+
     hp.graticule(dpar=20, dmer=30, color='gray', alpha=0.3)
 
 # ------------------------------------------------------------------
@@ -93,8 +95,8 @@ cb = fig.colorbar(
 tick_positions = np.linspace(vmin, vmax, 9)
 cb.set_ticks(tick_positions)
 cb.set_ticklabels([f"{x:.2f}" for x in tick_positions])
-cb.set_label(r'$\delta_{\mathrm{LRG}}$ (surdensité)', fontsize=18)
-cb.ax.tick_params(labelsize=12)
+cb.set_label(r'$\delta_{\mathrm{LRG}}$', fontsize=26)
+cb.ax.tick_params(labelsize=20)
 
 # Améliorer l'espacement pour une meilleure lisibilité
 plt.subplots_adjust(wspace=0.05, hspace=0.1, top=0.92, bottom=0.1)
