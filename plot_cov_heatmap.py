@@ -73,7 +73,9 @@ def main():
         default="yamls/chains/my_pr4.covmat",
         help="fichier de covariance",
     )
-    ap.add_argument("--output", default="correlation_heatmap.png", help="image de sortie")
+    ap.add_argument(
+        "--output", default="correlation_heatmap.png", help="image de sortie"
+    )
     args = ap.parse_args()
 
     params, cov = load_covariance(args.covmat)
@@ -110,11 +112,11 @@ def main():
     )
 
     plt.xticks(rotation=45, ha="right")
-    #ax.set_title("Matrice de corrélation des paramètres")
+    # ax.set_title("Matrice de corrélation des paramètres")
     plt.tight_layout()
     plt.savefig(args.output)
     plt.close(fig)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

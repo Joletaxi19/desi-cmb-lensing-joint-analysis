@@ -51,9 +51,7 @@ def load_json(path):
         ell = np.asarray(data["ell"])
     else:
         ell = np.asarray(data["ells"])
-    covs = {
-        k[4:]: np.asarray(v) for k, v in data.items() if k.startswith("cov_")
-    }
+    covs = {k[4:]: np.asarray(v) for k, v in data.items() if k.startswith("cov_")}
     return ell, covs
 
 
@@ -82,9 +80,11 @@ def build_full_covariance(data, kap_name="PR4", gal_names=None):
         ell = np.asarray(data["ells"])
     nell = len(ell)
 
-    pairs = [(g, g) for g in gal_names] + [
-        (kap_name, g) for g in gal_names
-    ] + [(kap_name, kap_name)]
+    pairs = (
+        [(g, g) for g in gal_names]
+        + [(kap_name, g) for g in gal_names]
+        + [(kap_name, kap_name)]
+    )
 
     n = len(pairs)
     cov = np.zeros((n * nell, n * nell))
@@ -111,8 +111,16 @@ def main():
     )
     ap.add_argument("json", nargs="?", help="fichier JSON contenant les C_ell")
     ap.add_argument("pair", nargs="?", help="nom du spectre, ex: PR4_LRGz1")
-    ap.add_argument("--cross-json", default="spectra/lrg_cross_pr4.json", help="fichier de covariance croisée")
-    ap.add_argument("--auto-json", default="spectra/pr4_kappa_auto.json", help="fichier de covariance auto κκ")
+    ap.add_argument(
+        "--cross-json",
+        default="spectra/lrg_cross_pr4.json",
+        help="fichier de covariance croisée",
+    )
+    ap.add_argument(
+        "--auto-json",
+        default="spectra/pr4_kappa_auto.json",
+        help="fichier de covariance auto κκ",
+    )
     ap.add_argument("--full", action="store_true", help="affiche la matrice complète")
     ap.add_argument("--output", "-o", default=None, help="image de sortie")
     args = ap.parse_args()
@@ -129,9 +137,9 @@ def main():
         n = len(labels)
         nel = len(ell)
         for bi in range(n):
-            rows = bi*nel + np.arange(nel)
+            rows = bi * nel + np.arange(nel)
             for bj in range(n):
-                cols = bj*nel + np.arange(nel)
+                cols = bj * nel + np.arange(nel)
                 mask[rows, cols] = True
 
         vmax = np.max(np.abs(corr[~mask])) if corr.size > 1 else 1
@@ -151,6 +159,7 @@ def main():
         n = len(labels)
         nell = len(ell)
         positions = np.arange(n) * nell + (nell - 1) / 2
+
         def pretty(lbl):
             lbl = lbl.replace("LRG", "")
             lbl = lbl.replace("PR4", "κ")
@@ -206,9 +215,16 @@ def main():
 
     for i in range(corr.shape[0]):
         ax.add_patch(plt.Rectangle((i, i), 1, 1, fill=True, color="lightgrey", lw=0))
-        ax.text(i + 0.5, i + 0.5, f"{corr[i, i]:.2f}", color="black",
-                ha="center", va="center", fontsize=8)
-    #ax.set_title(f"Correlation matrix: {key}", fontsize=12)
+        ax.text(
+            i + 0.5,
+            i + 0.5,
+            f"{corr[i, i]:.2f}",
+            color="black",
+            ha="center",
+            va="center",
+            fontsize=8,
+        )
+    # ax.set_title(f"Correlation matrix: {key}", fontsize=12)
     ax.set_xlabel(r"$\ell$")
     ax.set_ylabel(r"$\ell$")
     plt.tight_layout()
@@ -221,4 +237,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

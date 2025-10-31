@@ -16,7 +16,9 @@ from notebooks.viewchains import add_S8x, get_bestFit_values, make_triangle_plot
 
 def main():
     ap = argparse.ArgumentParser(description="Plot a chain using getdist")
-    ap.add_argument("--chain_dir", default="yamls/chains", help="directory with chain files")
+    ap.add_argument(
+        "--chain_dir", default="yamls/chains", help="directory with chain files"
+    )
     ap.add_argument("--file_root", default="my_pr4", help="prefix of the chain files")
     ap.add_argument(
         "--label",
@@ -24,7 +26,9 @@ def main():
         help="legend label (default: use file_root)",
     )
     ap.add_argument(
-        "--params", nargs="+", default=["OmM", "sigma8", "S8x"],
+        "--params",
+        nargs="+",
+        default=["OmM", "sigma8", "S8x"],
         help="parameters to display in the triangle plot",
     )
     ap.add_argument("--output", "-o", help="output image filename")

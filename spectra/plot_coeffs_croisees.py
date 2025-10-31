@@ -30,14 +30,28 @@ from matplotlib.gridspec import GridSpec
 from scipy.interpolate import interp1d
 
 # ---------- STYLE ----------
-plt.rcParams.update({
-    "font.size": 10, "axes.titlesize": 11, "axes.labelsize": 11,
-    "legend.fontsize": 9, "xtick.direction": "in", "ytick.direction": "in",
-    "figure.dpi": 140,
-})
-COLORS   = ["#332288", "#88CCEE", "#44AA99", "#117733",
-            "#999933", "#DDCC77", "#CC6677", "#882255"]
-MARKERS  = ["o", "s", "D", "^", "v", ">", "<", "P"]
+plt.rcParams.update(
+    {
+        "font.size": 10,
+        "axes.titlesize": 11,
+        "axes.labelsize": 11,
+        "legend.fontsize": 9,
+        "xtick.direction": "in",
+        "ytick.direction": "in",
+        "figure.dpi": 140,
+    }
+)
+COLORS = [
+    "#332288",
+    "#88CCEE",
+    "#44AA99",
+    "#117733",
+    "#999933",
+    "#DDCC77",
+    "#CC6677",
+    "#882255",
+]
+MARKERS = ["o", "s", "D", "^", "v", ">", "<", "P"]
 
 FULL_NAMES = {
     "LRGz1": "LRG bin z1 (0.4 < z < 0.6)",
@@ -45,6 +59,7 @@ FULL_NAMES = {
     "LRGz3": "LRG bin z3 (0.8 < z < 1.0)",
     "LRGz4": "LRG bin z4 (1.0 < z < 1.2)",
 }
+
 
 # ---------- OUTILS ----------
 def load_json(fn):
@@ -62,7 +77,7 @@ def load_json(fn):
 
     cls = {b: np.asarray(d[f"cl_{tag}_{b}"]) for b in bins}
     covs = {
-        b: np.asarray(d.get(f"cov_{tag}_{b}_{tag}_{b}", np.zeros((len(ell), len(ell)))) )
+        b: np.asarray(d.get(f"cov_{tag}_{b}_{tag}_{b}", np.zeros((len(ell), len(ell)))))
         for b in bins
     }
 
@@ -104,54 +119,75 @@ def make_panels(bins, data_files, theory_file, output_prefix):
         if theory_file and b in theory_file[2]:
             th_ell = theory_file[1]
             th_spec = theory_file[2][b]
-            line, = ax.plot(th_ell, th_spec, 'k-', lw=2, alpha=0.7)
+            (line,) = ax.plot(th_ell, th_spec, "k-", lw=2, alpha=0.7)
             if i == 0:
                 legend_handles.append(line)
                 legend_labels.append("Théorie (HEFT)")
 
-        for (label, ell, cls, covs), color, marker in zip(data_files, itertools.cycle(COLORS), itertools.cycle(MARKERS)):
+        for (label, ell, cls, covs), color, marker in zip(
+            data_files, itertools.cycle(COLORS), itertools.cycle(MARKERS)
+        ):
             spec = cls[b]
             err = np.sqrt(np.diag(covs[b]))
-            eb = ax.errorbar(ell, spec, yerr=err, fmt=marker, ms=5, capsize=2,
-                             color=color, label=label)
+            eb = ax.errorbar(
+                ell,
+                spec,
+                yerr=err,
+                fmt=marker,
+                ms=5,
+                capsize=2,
+                color=color,
+                label=label,
+            )
 
             if i == 0:
                 legend_handles.append(eb)
                 legend_labels.append(label)
 
             if theory_file and b in theory_file[2]:
-                th_interp = interp1d(th_ell, th_spec, bounds_error=False,
-                                     fill_value=(th_spec[0], th_spec[-1]))
+                th_interp = interp1d(
+                    th_ell,
+                    th_spec,
+                    bounds_error=False,
+                    fill_value=(th_spec[0], th_spec[-1]),
+                )
                 th_at_data = th_interp(ell)
                 ratio = spec / th_at_data
                 ratio_err = err / th_at_data
-                ax_r.errorbar(ell, ratio, yerr=ratio_err, fmt=marker, ms=5,
-                              capsize=2, color=color)
+                ax_r.errorbar(
+                    ell, ratio, yerr=ratio_err, fmt=marker, ms=5, capsize=2, color=color
+                )
 
         title = FULL_NAMES.get(b, b)
         ax.set_title(title)
-        ax.set_yscale('log')
-        ax.set_xscale('log')
-        ax.grid(ls=':')
+        ax.set_yscale("log")
+        ax.set_xscale("log")
+        ax.grid(ls=":")
         ax.tick_params(labelbottom=False)
-        ax_r.axhline(1.0, color='k', ls='--', alpha=0.5)
+        ax_r.axhline(1.0, color="k", ls="--", alpha=0.5)
         ax_r.set_ylim(0.5, 1.5)
-        ax_r.set_xscale('log')
+        ax_r.set_xscale("log")
         ax_r.set_xlabel(r"$\ell$")
-        ax_r.grid(ls=':')
+        ax_r.grid(ls=":")
         if i == 0:
             ax.set_ylabel(r"$C_\ell^{\kappa g}$")
             ax_r.set_ylabel("Données/Théorie")
 
         ax_r.set_xlim(30, 3000)
 
-    fig.legend(legend_handles, legend_labels,
-               loc='upper center', bbox_to_anchor=(0.5, 0.98),
-               ncol=len(legend_labels), frameon=False)
+    fig.legend(
+        legend_handles,
+        legend_labels,
+        loc="upper center",
+        bbox_to_anchor=(0.5, 0.98),
+        ncol=len(legend_labels),
+        frameon=False,
+    )
     fig.tight_layout(rect=[0, 0, 1, 0.95])
     fig.savefig(output_prefix + ".png")
     fig.savefig(output_prefix + ".pdf")
     print(f"→ {output_prefix}.pdf et {output_prefix}.png")
+
 
 # ---------- MAIN ----------
 if __name__ == "__main__":
